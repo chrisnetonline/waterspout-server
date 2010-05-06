@@ -1,0 +1,522 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<title>WaterSpout Locke Demo</title>
+
+	<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.8.1.custom.min.js"></script>
+	<script type="text/javascript" src="js/jquery.class.js"></script>
+	<script type="text/javascript" src="js/jquery.cookies.2.2.0.min.js"></script>
+	<script type="text/javascript" src="js/jquery.json-2.2.min.js"></script>
+	<script type="text/javascript" src="js/realtime.js"></script>
+	<script type="text/javascript" src="js/astar_memtronic.js"></script>
+
+	<link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="stats">
+	<strong>WebSockets:</strong>
+	Connections: <span id="ws_requests">-</span>,
+	Bytes (sent / received): <span id="ws_bytes_sent">-</span> / <span id="ws_bytes_received">-</span>
+
+	&nbsp; - &nbsp;
+
+	<strong>Long polling:</strong>
+	Connections: <span id="lp_requests">-</span>,
+	Bytes (sent / received): <span id="lp_bytes_sent">-</span> / <span id="lp_bytes_received">-</span>
+</div>
+
+<div id="console">
+	<div id="game" class="screen">
+		<div id="chat">
+			<div>
+				<form action="#" onsubmit="return sayIt(jQuery('#message'));">
+					<input type="text" name="message" id="message" value="" style="width:400px;" maxlength="100" autocomplete="off" />
+					<input type="submit" value="Say it!" />
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+var Sprite = Class.extend({
+	init : function(id) {
+		this.id = id;
+		this.node = jQuery('#' + id);
+		this.calcH();
+		this.calcW();
+	},
+
+	getX : function() {
+		return this.node.get(0).offsetLeft;
+	},
+
+	setX : function(x) {
+		this.node.css('left', x);
+	},
+
+	getY : function() {
+		return this.node.get(0).offsetTop;
+	},
+
+	setY : function(y) {
+		this.node.css('top', y);
+	},
+
+	moveBy : function(posX, posY) {
+		this.setX(this.getX() + posX);
+		this.setY(this.getY() + posY);
+	},
+
+	getW : function() {
+		return this.width;
+	},
+
+	getH : function() {
+		return this.height;
+	},
+
+	calcW : function() {
+		this.width = this.node.width();
+		return this.width;
+	},
+
+	calcH : function() {
+		this.height = this.node.height();
+		return this.height;
+	}
+});
+
+var Person = Sprite.extend({
+	init : function(id, startX, startY) {
+		if (typeof id == 'undefined' || id == null) {
+			id = 'uid' + Math.floor(Math.random() * 99999999);
+		}
+
+		// Create the person.
+		this.node = jQuery('<div class="person"><\/div>');
+		this.node.attr('id', id);
+		this.sprite = jQuery('<div><\/div>');
+		this.node.append(this.sprite);
+		gameScreen.node.append(this.node);
+
+		// Set the properties of the person.
+		this.id     = id;
+		this.speed  = 15;
+		this.height = this.node.height();
+		this.width  = this.node.width();
+		this.speech = undefined;
+		this.moves  = [];
+
+		// If they have a start position provided, put them there
+		if (startX != null && startY != null) {
+			this.gridPos = [startX, startY];
+		} else {
+			this.gridPos = [0, 0];
+		}
+
+		// Make sure the person is starting out at a proper grid location.
+		var gridCell   = jQuery('#cell_' + this.gridPos[0] + '_' + this.gridPos[1]);
+		var cellOffset = gridCell.position();
+		var gridPosX   = Math.floor(cellOffset.left - (this.getW() - gridCell.width()));
+		var gridPosY   = Math.floor(cellOffset.top - (this.getH() - gridCell.height()));
+		this.setX(gridPosX);
+		this.setY(gridPosY);
+
+		// Keep track of the person object in the dom element.
+		people[this.id] = this;
+	},
+
+	tick : function() {
+		if (this.moves.length > 0) {
+			// Calculate the move destination.
+			var next_coords  = this.moves[0];
+			var gridCell     = jQuery('#cell_' + next_coords[0] + '_' + next_coords[1]);
+			var cellOffset   = gridCell.position();
+			var nextGridPosX = Math.floor(cellOffset.left - (this.getW() - gridCell.width()));
+			var nextGridPosY = Math.floor(cellOffset.top - (this.getH() - gridCell.height()));
+
+			var curX = this.getX();
+			var curY = this.getY();
+
+			var offsetX = 0;
+			if (curX != nextGridPosX) {
+				var velocityX = nextGridPosX - curX;
+				if (Math.abs(velocityX) > this.speed) {
+					if (velocityX < 0) {
+						velocityX = -this.speed;
+					} else {
+						velocityX = this.speed;
+					}
+				}
+				offsetX = velocityX;
+			}
+
+			var offsetY = 0;
+			if (curY != nextGridPosY) {
+				var velocityY = nextGridPosY - curY;
+				if (Math.abs(velocityY) > this.speed) {
+					if (velocityY < 0) {
+						velocityY = -this.speed;
+					} else {
+						velocityY = this.speed;
+					}
+				}
+				offsetY = velocityY;
+			}
+
+			if (offsetX < 0) {
+				this.sprite.removeClass('sprite_right');
+				this.sprite.removeClass('sprite_right_walking');
+				this.sprite.addClass('sprite_left');
+				this.sprite.addClass('sprite_left_walking');
+			} else if (offsetX > 0) {
+				this.sprite.removeClass('sprite_left');
+				this.sprite.removeClass('sprite_left_walking');
+				this.sprite.addClass('sprite_right');
+				this.sprite.addClass('sprite_right_walking');
+			}
+
+			if (offsetY != 0) {
+				if (this.sprite.hasClass('sprite_left')) {
+					this.sprite.addClass('sprite_left_walking');
+				} else {
+					this.sprite.addClass('sprite_right_walking');
+				}
+			}
+
+			this.moveBy(offsetX, offsetY);
+			if (typeof this.speech != 'undefined') {
+				this.speech.moveBy(offsetX, offsetY);
+			}
+
+			// Change z-index to allow for walking in front and behind things.
+			this.node.css('z-index', this.getY() + this.getH() + 1000);
+
+			if (this.getX() == nextGridPosX && this.getY() == nextGridPosY) {
+				this.moves.shift();
+				this.gridPos = [next_coords[0], next_coords[1]];
+
+				if (this.moves.length == 0) {
+					this.sprite.removeClass('sprite_right_walking');
+					this.sprite.removeClass('sprite_left_walking');
+				}
+			}
+		}
+	},
+
+	sendMovement : function (coords) {
+		realtime.send('/locke/moving', {'coords': coords, 'person': this.id});
+	},
+
+	sendText : function (text) {
+		realtime.send('/locke/talking', {'text': text, 'person': this.id});
+	},
+
+	walkTo : function(coords) {
+		// Queue up the person's moves.
+		this.moves = coords;
+	},
+
+	setSpeech : function(val) {
+		if (val != '') {
+			if (typeof this.speech == 'undefined') {
+				// Create speech bubble.
+				var speech = jQuery('<div class="fg-tooltip ui-widget-content" id="speech_' + this.id + '"><span class="tooltip-text-container"><\/span><div class="fg-tooltip-pointer-down ui-widget-content"><div class="fg-tooltip-pointer-down-inner"><\/div><\/div><\/div>');
+				speech.css('z-index', 49999);
+				gameScreen.node.append(speech);
+				this.speech = new Sprite('speech_' + this.id);
+			}
+
+			var tooltip_container = this.speech.node.find('.tooltip-text-container');
+			var tooltip_text = jQuery('<span class="tooltip-text">&raquo; ' + val + '<\/span><br \/>');
+			tooltip_container.append(tooltip_text);
+
+			this.speech.node.css('width', 150);
+			if (tooltip_container.width() < 50) {
+				this.speech.node.css('width', 50);
+			} else if (tooltip_container.width() <= 150) {
+				this.speech.node.css('width', tooltip_container.width());
+			}
+
+			this.speech.setX(this.getX() + 15);
+			this.speech.setY(this.getY() - this.speech.calcH() - 20);
+
+			var _person = this;
+			setTimeout(function() {
+				if (_person.speech.node.find('.tooltip-text').length <= 1) {
+					_person.speech.node.fadeOut(300, function() {
+						_person.speech.node.remove();
+						_person.speech = undefined;
+					});
+				} else {
+					tooltip_text.remove();
+					_person.speech.setX(_person.getX() + 15);
+					_person.speech.setY(_person.getY() - _person.speech.calcH() - 20);
+				}
+			}, 5000);
+		}
+	},
+
+	goAway : function() {
+		if (typeof this.node != 'undefined') {
+			this.node.remove();
+		}
+		if (typeof this.speech != 'undefined') {
+			this.speech.node.remove();
+		}
+
+		delete people[this.id];
+	}
+});
+
+var Obstacle = Sprite.extend({
+	init : function(className, cells) {
+		this.id   = 'obstacle' + Math.floor(Math.random() * 99999999);
+		this.node = jQuery('<div></div>');
+		this.node.attr('id', this.id);
+		this.node.addClass(className);
+
+		gameScreen.node.append(this.node);
+
+		this.height = this.node.height();
+		this.width  = this.node.width();
+
+		// Block out grid cells as an obstacle.
+		var bottom_left = [0, 0];
+		for (var i = 0, size = cells.length; i < size; i++) {
+			var obstacleCell = jQuery('#cell_' + cells[i][0] + '_' + cells[i][1]);
+			obstacleCell.addClass('grid_obstacle');
+
+			graphSet[cells[i][1]][cells[i][0]] = 1;
+			if (cells[i][1] > bottom_left[1]) {
+				bottom_left[1] = cells[i][1];
+				bottom_left[0] = cells[i][0];
+			} else if (cells[i][1] == bottom_left[1] && cells[i][0] < bottom_left[0]) {
+				bottom_left[0] = cells[i][0];
+			}
+		}
+
+		var blCell   = jQuery('#cell_' + bottom_left[0] + '_' + bottom_left[1]);
+		var blOffset = blCell.position();
+
+		this.setX(blOffset.left);
+		this.setY(blOffset.top + blCell.height() - this.getH());
+
+		// Change z-index to allow for walking in front and behind things.
+		this.node.css('z-index', this.getY() + this.getH() + 1000);
+
+		var _obs = this;
+
+		var numCellsRight = this.width / gridCellWidth;
+		var numCellsUp = this.height / gridCellHeight;
+		for (var j = 0; j < numCellsRight; j++) {
+			for (var k = 0; k < numCellsUp; k++) {
+				var hoverCell = jQuery('#cell_' + (bottom_left[0] + j) + '_' + (bottom_left[1] - k));
+				//hoverCell.css('border', '1px solid blue');
+				hoverCell.mouseover(function() {
+					_obs.node.addClass('obstacle_hover');
+				});
+				hoverCell.mouseout(function() {
+					_obs.node.removeClass('obstacle_hover');
+				});
+			}
+		}
+	}
+});
+
+var Console = Class.extend({
+	init : function(tickSpeed) {
+		this.tickSpeed = tickSpeed || 10; // milliseconds between ticks
+		this.drawGrid();
+	},
+
+	start : function() {
+		var _con = this;
+		window.setInterval(function() { _con.tick() }, this.tickSpeed);
+	},
+
+	drawGrid : function() {
+		var cellTemplate = jQuery('<span />');
+		cellTemplate.addClass('grid_cell');
+
+		graphSet = new Array(gridSizeY);
+
+		var gridTop  = 0;
+		var gridLeft = 0;
+		for (var y = 0; y < gridSizeY; y++) {
+			graphSet[y] = new Array(gridSizeX);
+
+			for (var x = 0; x < gridSizeX; x++) {
+				var id = 'cell_' + x + '_' + y;
+				var cell = cellTemplate.clone();
+				cell.attr('id', id).attr('x', x).attr('y', y);
+				cell.click(this.handleClick);
+				cell.css('top', gridTop);
+				cell.css('left', gridLeft);
+
+				gameScreen.node.append(cell);
+
+				graphSet[y][x] = 0;
+
+				gridLeft+= gridCellWidth;
+			}
+
+			gridLeft = 0;
+			gridTop+= gridCellHeight;
+		}
+	},
+
+	handleClick : function(e) {
+		var cellClicked = jQuery(e.target);
+		var gridX       = parseInt(cellClicked.attr('x'));
+		var gridY       = parseInt(cellClicked.attr('y'));
+
+		var coords = AStar(graphSet, myPerson.gridPos, [gridX, gridY], 'Diagonal');
+		if (coords.length > 0) {
+			coords.shift();
+			myPerson.sendMovement(coords);
+			myPerson.walkTo(coords);
+		}
+
+		// Keep track of your last position.
+		jQuery.cookies.set('locke_x', gridX);
+		jQuery.cookies.set('locke_y', gridY);
+
+		jQuery('#message').focus();
+	},
+
+	tick : function() {
+		for (var i in people) {
+			people[i].tick();
+		}
+	}
+});
+
+function initGame() {
+	gameScreen = new Sprite('game');
+
+	// Create the game console.
+	gameConsole = new Console(50);
+	gameConsole.start();
+
+	// Create realtime communication object.
+	realtime = new realtimeComm(window.location.host);
+
+	setTimeout(function() {
+		// Add obstacles.
+		new Obstacle('tree', [[4, 12], [5, 12], [6, 12]]);
+		new Obstacle('tree2', [[17, 7], [18, 7]]);
+
+		// Create yourself.
+		jQuery.cookies.setOptions({domain: window.location.host.substring(window.location.host.indexOf('.'), window.location.host.length), path: '/'});
+		myPerson = new Person(jQuery.cookies.get('locke_uid'), jQuery.cookies.get('locke_x'), jQuery.cookies.get('locke_y'));
+		myPerson.node.removeClass('person');
+		myPerson.node.addClass('self');
+		jQuery.cookies.set('locke_uid', myPerson.id);
+
+		// Add listener for receiving updates from other users.
+		realtime.addListener('/locke/updates', function(response) {
+			if (response) {
+				for (var i = 0, size = response.commands.length; i < size; i++) {
+					if (response.commands[i].person != null && response.commands[i].person != myPerson.id) {
+						var person2;
+						if (!people[response.commands[i].person]) {
+							person2 = new Person(response.commands[i].person);
+						} else {
+							person2 = people[response.commands[i].person];
+						}
+						if (response.commands[i].coords) {
+							person2.walkTo(response.commands[i].coords);
+						} else if (response.commands[i].text) {
+							person2.setSpeech(response.commands[i].text);
+						}
+					}
+				}
+			}
+		});
+
+		// Report your presence to other users.
+		realtime.send('/locke/presence', {'person': myPerson.id, 'coords': myPerson.gridPos}, presenceCallback);
+		setInterval(function() {
+			realtime.send('/locke/presence', {'person': myPerson.id, 'coords': myPerson.gridPos}, presenceCallback);
+		}, 5000);
+	}, 1000);
+
+	// Give the chat box focus.
+	jQuery('#message').focus();
+}
+
+function presenceCallback(data) {
+	if (data) {
+		jQuery('#ws_requests').html(addCommas(data['ws_requests']));
+		jQuery('#ws_bytes_sent').html(addCommas(data['ws_bytes_sent']));
+		jQuery('#ws_bytes_received').html(addCommas(data['ws_bytes_received']));
+		jQuery('#lp_requests').html(addCommas(data['lp_requests']));
+		jQuery('#lp_bytes_sent').html(addCommas(data['lp_bytes_sent']));
+		jQuery('#lp_bytes_received').html(addCommas(data['lp_bytes_received']));
+
+		if (people && data['players']) {
+			for (var i in people) {
+				if (i != myPerson.id && typeof data['players'][i] == 'undefined') {
+					people[i].node.effect('explode', {}, 1000, people[i].goAway);
+				}
+			}
+
+			var person2;
+			for (var i in data['players']) {
+				if (typeof people[i] == 'undefined') {
+					new Person(i, data['players'][i]['coords'][0], data['players'][i]['coords'][1]);
+				}
+			}
+		}
+	} else {
+		jQuery('#ws_requests').html('-');
+		jQuery('#ws_bytes_sent').html('-');
+		jQuery('#ws_bytes_received').html('-');
+		jQuery('#lp_requests').html('-');
+		jQuery('#lp_bytes_sent').html('-');
+		jQuery('#lp_bytes_received').html('-');
+	}
+}
+
+function addCommas(nStr) {
+	nStr += '';
+	var x = nStr.split('.');
+	var x1 = x[0];
+	var x2 = x.length > 1 ? '.' + x[1] : '';
+	var rgx = /(\d+)(\d{3})/;
+	while (rgx.test(x1)) {
+		x1 = x1.replace(rgx, '$1' + ',' + '$2');
+	}
+	return x1 + x2;
+}
+
+function sayIt(el) {
+	if (el.val() != '') {
+		myPerson.setSpeech(el.val());
+		myPerson.sendText(el.val());
+		el.val('');
+	}
+
+	return false;
+}
+
+var gameConsole, gameScreen, myPerson, realtime;
+var people         = {};
+var graphSet       = [];
+var gridCellHeight = 40;
+var gridCellWidth  = 40;
+var gridSizeX      = 25;
+var gridSizeY      = 19;
+
+jQuery(document).ready(function() {
+	initGame();
+});
+</script>
+
+</body>
+</html>

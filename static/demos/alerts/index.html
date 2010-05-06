@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+	<title>Waterspout Alerts</title>
+	<script type="text/javascript" src="/static/get/protoaculous.1.8.3.min.js"></script>
+	<script type="text/javascript" src="/static/get/realtime.js"></script>
+	<script type="text/javascript" src="/static/get/demos/alerts/growler.js"></script>
+	<style type="text/css">
+		html, body {background-color:#EEE;}
+		body, td, th {font-family:Arial; font-size:12px; line-height:130%;}
+		input, textarea, select, button {font-family:Arial; font-size:11px; vertical-align:middle;}
+	</style>
+	<link rel="stylesheet" href="/static/get/demos/alerts/growler.css" type="text/css" />
+</head>
+<body>
+	<h1>Waterspout Alerts</h1>
+
+	<form action="" method="post" id="alertform" onsubmit="return false;">
+	<input name="message" id="message" autocomplete="off" />
+	<input type="submit" value="Send" />
+	</form>
+	
+	<script type="text/javascript">
+
+	var g;
+	document.observe('dom:loaded', function(event) {
+		g = new k.Growler({location: 'br'});
+
+		// Add listener for user clicking submit button
+		Event.observe($('alertform'), 'submit', function(event) {
+			WaterspoutMessage.messageSend();
+			return false;
+		});
+
+		// Give the message input focus on page load
+		$('message').focus();
+	});
+
+	var realtime_add = new RealTimeMessage('localhost:7777/message/add', false);
+	realtime_add.onmessage = function(data) { WaterspoutMessage.messageSendSuccess(data); };
+
+	var realtime_updates = new RealTimeMessage('localhost:7777/message/updates', true);
+	realtime_updates.onmessage = function(data) { WaterspoutMessage.messageUpdatesSuccess(data); };
+
+	var WaterspoutMessage = {
+
+		messageSend: function() {
+			var params = $('alertform').serialize(true);
+
+			// Make sure something was entered
+			if (params.message.empty()) {
+				return;
+			}
+
+			// Disable the form until we get a response
+			$('alertform').disable();
+
+			try {
+				realtime_add.send(params);
+			} catch (e) {
+				alert('Send Exception: ' + e);
+			}
+		},
+
+		messageSendSuccess: function(transport) {
+			// Re-enable the form
+			$('alertform').enable();
+
+			// Clear message input
+			$('message').clear();
+
+			// Make sure message input has focus again
+			$('message').focus();
+		},
+
+		messageUpdatesSuccess: function(response) {
+			// Make sure we got a valid response
+			if (response) {
+				for (var i = 0, size = response.messages.size(); i < size; i++) {
+					g.growl(response.messages[i].message);
+				}
+			}
+		}
+	};
+	</script>
+</body>
+</html>

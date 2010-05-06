@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+# waterspout - Startup script for the WaterSpout Server
+#
+# chkconfig: - 95 15
+# description: WaterSpout daemon for realtime communication  
+# probe: false
+
+# Source function library.
+. /lib/lsb/init-functions
+
+RETVAL=0
+progdir="/home/clewis82/waterspout/"
+prog="server.php"
+USER="root"
+
+start() {
+        # Start daemons.
+	if [ -n "`pidof -x $prog`" ]; then
+		echo -n "$prog: already running"
+		log_failure_msg $"$prog start"
+		echo
+		return 1
+	fi
+        echo -n $"Starting WaterSpout: "
+	# we can't seem to use daemon here - emulate its functionality
+        sudo su -c "$progdir$prog - $USER &" 
+	RETVAL=$?
+	sleep 1
+	if [ -z "`pidof -x $prog`" ]; then
+		# The child processes have died after fork()ing, e.g.
+		# because of a broken config file
+		RETVAL=1
+	fi
+	[ $RETVAL -ne 0 ] && log_failure_msg $"$prog startup"
+ 	[ $RETVAL -eq 0 ] && touch /var/lock/waterspout && log_success_msg $"$prog startup"
+	echo	
+	return $RETVAL
+}
+stop() {
+	RETVAL=0
+	pid=
+        # Stop daemons.
+        echo -n $"Stopping WaterSpout: "
+	pid=`pidof -x $prog`
+	if [ -n "$pid" ]; then
+	 sudo kill -TERM $pid
+	 sleep 1;	# Give it some time to die
+        else
+	 log_failure_msg $"$prog stop"
+	 echo
+	 return 1
+        fi
+	RETVAL=$?
+	[ $RETVAL -ne 0 ] && log_failure_msg $"$prog stop" 
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/waterspout && log_success_msg $"$prog stop" 
+	echo
+	return $RETVAL
+}
+
+restart() {
+	stop
+# wait for forked daemons to die
+	sleep 1
+	start
+}	
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status $prog
+		RETVAL=$?
+		;;
+	restart)
+		restart
+		;;
+	*)
+        	echo $"Usage: $0 {start|stop|restart|status}"
+		exit 1
+esac
+
+exit $?
+

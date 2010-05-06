@@ -1,0 +1,40 @@
+html, body {background-color:#FFF;}
+body, td, th {font-family:Arial; font-size:12px; line-height:130%;}
+form {margin:0; padding:0;}
+input, textarea, select, button {font-family:Arial; font-size:11px; vertical-align:middle;}
+
+#console {height:760px; width:1000px; background:#FFF url(images/grass.png); border:5px solid #000; -moz-border-radius:10px; -webkit-border-radius:10px; box-shadow:inset 2px 2px 5px rgba(0, 0, 0, 0.8); -moz-box-shadow:inset 2px 2px 5px rgba(0, 0, 0, 0.8); -webkit-box-shadow:inset 2px 2px 5px rgba(0, 0, 0, 0.8);}
+.screen {height:100%; width:100%; position:relative;}
+.person, .self {height:53px; width:33px; position:absolute; padding:0; margin:0; top:0; left:0;}
+.person div {height:49px; width:29px; margin:2px; padding:0; background:transparent url(images/locke.gif) 0 0 no-repeat;}
+.self div {height:49px; width:29px; margin:2px; padding:0; background:transparent url(images/locke.gif) -58px 0 no-repeat;}
+.person .sprite_right {background-position:0 0;}
+.person .sprite_right_walking {background-position:0 -49px;}
+.person .sprite_left {background-position:-29px 0;}
+.person .sprite_left_walking {background-position:-29px -49px;}
+.self .sprite_right {background-position:-58px 0;}
+.self .sprite_right_walking {background-position:-58px -49px;}
+.self .sprite_left {background-position:-87px 0;}
+.self .sprite_left_walking {background-position:-87px -49px;}
+
+#stats {padding:10px 5px 20px 5px;}
+#stats strong {font-size:14px;}
+#stats span {font-weight:bold;}
+
+#chat {position:absolute; z-index:50001; bottom:0; left:245px; width:500px; border:1px solid #000; border-left:0; border-bottom:0; background:#000; -webkit-border-top-left-radius:10px; -webkit-border-top-right-radius:10px; -moz-border-radius-topleft:10px; -moz-border-radius-topright:10px; box-shadow:2px 2px 5px rgba(0, 0, 0, 0.8); -moz-box-shadow:2px 2px 5px rgba(0, 0, 0, 0.8); -webkit-box-shadow:2px 2px 5px rgba(0, 0, 0, 0.8);}
+#chat div {padding:8px 0 5px 0; text-align:center;}
+
+/* Tooltip and Pointer CSS */
+.ui-widget-content {border:1px solid #000; background:#FFF;}
+.fg-tooltip {border:1px solid #000 !important; background:#FFF; padding:5px; width:150px; position:absolute; font-size:10px; position:absolute; -moz-border-radius:5px; -webkit-border-radius:5px;}
+.fg-tooltip .fg-tooltip-pointer-down, .fg-tooltip .fg-tooltip-pointer-down-inner {position:absolute; width:0; height:0; border-bottom-width:0; background:none;}
+.fg-tooltip .fg-tooltip-pointer-down {border-left:0; border-right:14px dotted transparent; border-top-width:14px; bottom:-14px; right:auto; left:1em; margin:0;}
+.fg-tooltip .fg-tooltip-pointer-down-inner {border-left:0; border-right:12px dotted transparent; border-top:12px solid #FFF; bottom:auto; top:-14px; left:1px;}
+.fg-tooltip .tooltip-text {white-space:pre-wrap; /* css-3 */ white-space:-moz-pre-wrap; /* Mozilla, since 1999 */ white-space:-pre-wrap; /* Opera 4-6 */ white-space:-o-pre-wrap; /* Opera 7 */ word-wrap:break-word; /* Internet Explorer 5.5+ */}
+
+.grid_cell {display:block; height:40px; width:40px; cursor:pointer; z-index:50000; position:absolute;}
+.grid_obstacle {cursor:default !important;}
+
+.obstacle_hover {filter:alpha(opacity=50); -moz-opacity:0.5; opacity: 0.5;}
+.tree {background:transparent url(images/tree.png) no-repeat; height:155px; width:115px; position:absolute;}
+.tree2 {background:transparent url(images/tree2.png) no-repeat; height:118px; width:91px; position:absolute;}
