@@ -376,7 +376,8 @@ class HTTPRequest implements Serializable
 			if (strpos($content_type, 'application/x-www-form-urlencoded') !== false)
 			{
 				$arguments = array();
-				parse_str($this->body, $arguments);
+				$body = urldecode($this->body);
+				parse_str($body, $arguments);
 				foreach ($arguments as $name => $value)
 				{
 					$this->post[$name] = $value;
