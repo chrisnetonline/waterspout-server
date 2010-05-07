@@ -423,7 +423,6 @@ function initGame() {
 		new Obstacle('tree2', [[17, 7], [18, 7]]);
 
 		// Create yourself.
-		jQuery.cookies.setOptions({domain: window.location.host.substring(window.location.host.indexOf('.'), window.location.host.length), path: '/'});
 		myPerson = new Person(jQuery.cookies.get('locke_uid'), jQuery.cookies.get('locke_name'), jQuery.cookies.get('locke_x'), jQuery.cookies.get('locke_y'));
 		myPerson.node.removeClass('person');
 		myPerson.node.addClass('self');
@@ -528,6 +527,9 @@ function joinWorld(name) {
 	
 	return false;
 }
+
+// Configure cookie handling.
+jQuery.cookies.setOptions({path: '/'});
 
 var gameConsole, gameScreen, myPerson, realtime;
 var people         = {};
