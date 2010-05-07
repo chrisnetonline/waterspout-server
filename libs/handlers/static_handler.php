@@ -10,16 +10,22 @@ class Static_Handler extends Handler
 	public function get()
 	{
 		// Make sure the file exists.
-		$config = $this->dispatcher->get_config();
-		$path   = $config['STATIC_CONTENT'] . DIRECTORY_SEPARATOR . str_replace('/static/get/', '', $this->request->get_uri());
+		$sanitized_uri = str_replace('/static/get/', '', $this->request->get_uri());
+		$config        = $this->dispatcher->get_config();
+		$path          = str_replace('/', DIRECTORY_SEPARATOR, $config['STATIC_CONTENT'] . DIRECTORY_SEPARATOR . $sanitized_uri);
 
 		// If a directory was specified, try to load the default file.
 		if (is_dir($path))
 		{
-			if (substr($path, -1) != DIRECTORY_SEPARATOR)
+			// If there is no trailing slash, add one.
+			if (substr($sanitized_uri, -1) != '/')
 			{
-				$path.= DIRECTORY_SEPARATOR;
+				$response = $this->_301('/' . $sanitized_uri . '/');
+				$this->write($response);
+				
+				return;
 			}
+			
 			$path.= $config['DEFAULT_FILENAME'];
 		}
 
@@ -100,6 +106,21 @@ class Static_Handler extends Handler
 
 		$response->set_body(file_get_contents($path), false);
 
+
+		return $response;
+	}
+
+	/**
+	 * Sends a 301 redirect.
+	 *
+	 * @access private
+	 * @param  string $url
+	 * @return httpresponse
+	 */
+	private function _301($url)
+	{
+		$response = new HTTPResponse(301);
+		$response->add_header('Location', $url);
 
 		return $response;
 	}

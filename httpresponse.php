@@ -15,6 +15,7 @@ class HTTPResponse
 	 * @var    array
 	 */
 	static $statuses = array(200 => 'OK',
+	                         301 => 'Moved Permanently',
 	                         302 => 'Found',
 	                         304 => 'Not Modified',
 	                         403 => 'Forbidden',
