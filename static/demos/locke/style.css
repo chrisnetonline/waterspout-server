@@ -5,7 +5,7 @@ input, textarea, select, button {font-family:Arial; font-size:11px; vertical-ali
 
 #console {height:760px; width:1000px; background:#FFF url(images/grass.png); border:5px solid #000; -moz-border-radius:10px; -webkit-border-radius:10px; box-shadow:inset 2px 2px 5px rgba(0, 0, 0, 0.8); -moz-box-shadow:inset 2px 2px 5px rgba(0, 0, 0, 0.8); -webkit-box-shadow:inset 2px 2px 5px rgba(0, 0, 0, 0.8);}
 .screen {height:100%; width:100%; position:relative;}
-.person, .self {height:53px; width:33px; position:absolute; padding:0; margin:0; top:0; left:0;}
+.person, .self {height:53px; width:33px; position:absolute; padding:0; margin:0; top:0; left:0; text-align:center;}
 .person div {height:49px; width:29px; margin:2px; padding:0; background:transparent url(images/locke.gif) 0 0 no-repeat;}
 .self div {height:49px; width:29px; margin:2px; padding:0; background:transparent url(images/locke.gif) -58px 0 no-repeat;}
 .person .sprite_right {background-position:0 0;}
@@ -16,6 +16,8 @@ input, textarea, select, button {font-family:Arial; font-size:11px; vertical-ali
 .self .sprite_right_walking {background-position:-58px -49px;}
 .self .sprite_left {background-position:-87px 0;}
 .self .sprite_left_walking {background-position:-87px -49px;}
+
+.person_name {font-weight:bold; color:#FFF; text-shadow:black 0.1em 0.1em 0.2em; position:absolute; text-align:center; display:block; width:120px; left:-44px;}
 
 #stats {padding:10px 5px 20px 5px;}
 #stats strong {font-size:14px;}

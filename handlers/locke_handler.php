@@ -214,7 +214,7 @@ class Locke_Handler extends Handler
 	public function presence()
 	{
 		// Add this user to the list.
-		self::$_presence[$this->request->get_request_var('person')] = array('timestamp' => time(), 'coords' => $this->request->get_request_var('coords'));
+		self::$_presence[$this->request->get_request_var('person')] = array('timestamp' => time(), 'coords' => $this->request->get_request_var('coords'), 'name' => $this->request->get_request_var('name'));
 
 		// Filter the presence array.
 		$this->_presence_deadline = time() - 10;

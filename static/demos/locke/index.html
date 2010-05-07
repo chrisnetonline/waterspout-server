@@ -16,26 +16,34 @@
 </head>
 <body>
 
-<div id="stats">
-	<strong>WebSockets:</strong>
-	Connections: <span id="ws_requests">-</span>,
-	Bytes (sent / received): <span id="ws_bytes_sent">-</span> / <span id="ws_bytes_received">-</span>
+<form id="join" action="#" onsubmit="return joinWorld(jQuery('#person_name').val());">
+	<label for="person_name">Name:</label>
+	<input type="text" name="person_name" id="person_name" value="" maxlength="30" />
+	<input type="submit" value="Join" />
+</form>
 
-	&nbsp; - &nbsp;
+<div id="world" style="display:none;">
+	<div id="stats">
+		<strong>WebSockets:</strong>
+		Connections: <span id="ws_requests">-</span>,
+		Bytes (sent / received): <span id="ws_bytes_sent">-</span> / <span id="ws_bytes_received">-</span>
 
-	<strong>Long polling:</strong>
-	Connections: <span id="lp_requests">-</span>,
-	Bytes (sent / received): <span id="lp_bytes_sent">-</span> / <span id="lp_bytes_received">-</span>
-</div>
+		&nbsp; - &nbsp;
 
-<div id="console">
-	<div id="game" class="screen">
-		<div id="chat">
-			<div>
-				<form action="#" onsubmit="return sayIt(jQuery('#message'));">
-					<input type="text" name="message" id="message" value="" style="width:400px;" maxlength="100" autocomplete="off" />
-					<input type="submit" value="Say it!" />
-				</form>
+		<strong>Long polling:</strong>
+		Connections: <span id="lp_requests">-</span>,
+		Bytes (sent / received): <span id="lp_bytes_sent">-</span> / <span id="lp_bytes_received">-</span>
+	</div>
+
+	<div id="console">
+		<div id="game" class="screen">
+			<div id="chat">
+				<div>
+					<form action="#" onsubmit="return sayIt(jQuery('#message'));">
+						<input type="text" name="message" id="message" value="" style="width:400px;" maxlength="100" autocomplete="off" />
+						<input type="submit" value="Say it!" />
+					</form>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -91,16 +99,17 @@ var Sprite = Class.extend({
 });
 
 var Person = Sprite.extend({
-	init : function(id, startX, startY) {
+	init : function(id, nameText, startX, startY) {
 		if (typeof id == 'undefined' || id == null) {
 			id = 'uid' + Math.floor(Math.random() * 99999999);
 		}
 
 		// Create the person.
-		this.node = jQuery('<div class="person"><\/div>');
-		this.node.attr('id', id);
+		this.node = jQuery('<div class="person" id="' + id + '"><\/div>');
 		this.sprite = jQuery('<div><\/div>');
+		this.name = jQuery('<span class="person_name">' + (typeof nameText != 'undefined' ? nameText : '') + '<\/span>');
 		this.node.append(this.sprite);
+		this.node.append(this.name);
 		gameScreen.node.append(this.node);
 
 		// Set the properties of the person.
@@ -111,7 +120,7 @@ var Person = Sprite.extend({
 		this.speech = undefined;
 		this.moves  = [];
 
-		// If they have a start position provided, put them there
+		// If they have a start position provided, put them there.
 		if (startX != null && startY != null) {
 			this.gridPos = [startX, startY];
 		} else {
@@ -191,6 +200,7 @@ var Person = Sprite.extend({
 			this.moveBy(offsetX, offsetY);
 			if (typeof this.speech != 'undefined') {
 				this.speech.moveBy(offsetX, offsetY);
+				this.speech.node.css('z-index', this.getY() + this.getH() + 1000);
 			}
 
 			// Change z-index to allow for walking in front and behind things.
@@ -257,16 +267,17 @@ var Person = Sprite.extend({
 					_person.speech.setX(_person.getX() + 15);
 					_person.speech.setY(_person.getY() - _person.speech.calcH() - 20);
 				}
-			}, 5000);
+			}, 10000);
 		}
 	},
 
 	goAway : function() {
-		if (typeof this.node != 'undefined') {
-			this.node.remove();
-		}
 		if (typeof this.speech != 'undefined') {
 			this.speech.node.remove();
+		}
+
+		if (typeof this.node != 'undefined') {
+			this.node.remove();
 		}
 
 		delete people[this.id];
@@ -413,7 +424,7 @@ function initGame() {
 
 		// Create yourself.
 		jQuery.cookies.setOptions({domain: window.location.host.substring(window.location.host.indexOf('.'), window.location.host.length), path: '/'});
-		myPerson = new Person(jQuery.cookies.get('locke_uid'), jQuery.cookies.get('locke_x'), jQuery.cookies.get('locke_y'));
+		myPerson = new Person(jQuery.cookies.get('locke_uid'), jQuery.cookies.get('locke_name'), jQuery.cookies.get('locke_x'), jQuery.cookies.get('locke_y'));
 		myPerson.node.removeClass('person');
 		myPerson.node.addClass('self');
 		jQuery.cookies.set('locke_uid', myPerson.id);
@@ -440,9 +451,9 @@ function initGame() {
 		});
 
 		// Report your presence to other users.
-		realtime.send('/locke/presence', {'person': myPerson.id, 'coords': myPerson.gridPos}, presenceCallback);
+		realtime.send('/locke/presence', {'person': myPerson.id, 'name': jQuery.cookies.get('locke_name'), 'coords': myPerson.gridPos}, presenceCallback);
 		setInterval(function() {
-			realtime.send('/locke/presence', {'person': myPerson.id, 'coords': myPerson.gridPos}, presenceCallback);
+			realtime.send('/locke/presence', {'person': myPerson.id, 'name': jQuery.cookies.get('locke_name'), 'coords': myPerson.gridPos}, presenceCallback);
 		}, 5000);
 	}, 1000);
 
@@ -463,13 +474,15 @@ function presenceCallback(data) {
 			for (var i in people) {
 				if (i != myPerson.id && typeof data['players'][i] == 'undefined') {
 					people[i].node.effect('explode', {}, 1000, people[i].goAway);
+				} else {
+					people[i].name.html(data['players'][i]['name']);
 				}
 			}
 
 			var person2;
 			for (var i in data['players']) {
 				if (typeof people[i] == 'undefined') {
-					new Person(i, data['players'][i]['coords'][0], data['players'][i]['coords'][1]);
+					new Person(i, data['players'][i]['name'], data['players'][i]['coords'][0], data['players'][i]['coords'][1]);
 				}
 			}
 		}
@@ -505,6 +518,17 @@ function sayIt(el) {
 	return false;
 }
 
+function joinWorld(name) {
+	jQuery.cookies.set('locke_name', name);
+
+	jQuery('#join').hide();
+	jQuery('#world').show();
+	
+	initGame();
+	
+	return false;
+}
+
 var gameConsole, gameScreen, myPerson, realtime;
 var people         = {};
 var graphSet       = [];
@@ -512,10 +536,6 @@ var gridCellHeight = 40;
 var gridCellWidth  = 40;
 var gridSizeX      = 25;
 var gridSizeY      = 19;
-
-jQuery(document).ready(function() {
-	initGame();
-});
 </script>
 
 </body>
