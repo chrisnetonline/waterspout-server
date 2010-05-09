@@ -18,7 +18,7 @@ class Static_Handler extends Handler
 		if (is_dir($path))
 		{
 			// If there is no trailing slash, add one.
-			if (substr($sanitized_uri, -1) != '/')
+			if (!empty($sanitized_uri) && substr($sanitized_uri, -1) != '/')
 			{
 				$response = $this->_301('/' . $sanitized_uri . '/');
 				$this->write($response);
