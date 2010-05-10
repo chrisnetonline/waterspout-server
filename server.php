@@ -17,8 +17,8 @@ if (!empty($argc) && $argc >= 3)
 {
 	if ($argv[1] == '-v' && is_numeric($argv[2]))
 	{
-		$config['server']['verbose']     = $argv[2];
-		$config['dispatcher']['verbose'] = $argv[2];
+		$config['server']['VERBOSE']     = $argv[2];
+		$config['dispatcher']['VERBOSE'] = $argv[2];
 	}
 }
 

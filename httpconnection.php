@@ -123,7 +123,7 @@ class HTTPConnection
 			throw new BadMethodCallException('Attempting to write on a closed request connection.');
 		}
 
-		if ($this->_server->config('verbose') >= 3)
+		if ($this->_server->config('VERBOSE') >= 3)
 		{
 			file_put_contents($this->_server->config('LOG_FILE'), "RESPONSE BODY\t" . $this->_start . ":\r\n\r\n" . $chunk . "\r\n", FILE_APPEND);
 		}
@@ -194,7 +194,7 @@ class HTTPConnection
 	 */
 	public function on_headers($data)
 	{
-		if ($this->_server->config('verbose') >= 2)
+		if ($this->_server->config('VERBOSE') >= 2)
 		{
 			file_put_contents($this->_server->config('LOG_FILE'), "REQUEST HEADERS\t" . $this->_start . ":\r\n\r\n" . $data . "\r\n", FILE_APPEND);
 		}
@@ -258,7 +258,7 @@ class HTTPConnection
 	 */
 	public function on_request_body($data)
 	{
-		if ($this->_server->config('verbose') >= 3)
+		if ($this->_server->config('VERBOSE') >= 3)
 		{
 			file_put_contents($this->_server->config('LOG_FILE'), "REQUEST BODY\t" . $this->_start . ":\r\n\r\n" . $data . "\r\n", FILE_APPEND);
 		}

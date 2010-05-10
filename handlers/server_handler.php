@@ -43,8 +43,8 @@ class Server_Handler extends Handler
 			// Check for verbosity level from the command line.
 			if (($verbose = $this->request->get_request_var('verbose')) != false)
 			{
-				$config['server']['verbose']     = $verbose;
-				$config['dispatcher']['verbose'] = $verbose;
+				$config['server']['VERBOSE']     = $verbose;
+				$config['dispatcher']['VERBOSE'] = $verbose;
 			}
 
 			$this->dispatcher->set_config($config['dispatcher']);

@@ -67,7 +67,7 @@ abstract class Handler
 		$config = $this->dispatcher->get_config();
 		try
 		{
-			if ($config['verbose'] >= 2)
+			if ($config['VERBOSE'] >= 2)
 			{
 				file_put_contents($config['LOG_FILE'], $response->headers_as_string() . "\r\n", FILE_APPEND);
 			}
@@ -79,7 +79,7 @@ abstract class Handler
 		}
 		catch (Exception $e)
 		{
-			if ($config['verbose'] >= 2)
+			if ($config['VERBOSE'] >= 2)
 			{
 				file_put_contents($config['LOG_FILE'], $e->getMessage() . "\r\n", FILE_APPEND);
 			}
