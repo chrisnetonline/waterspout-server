@@ -52,17 +52,20 @@ realtimeComm.prototype.send = function(uri, data, callback) {
 		jQuery.ajax({
 			'url': _rt.urlHttp + uri,
 			'type': 'POST',
-			'dataType': 'json',
+			'dataType': 'jsonp',
+			'jsonpCallback': '_rt.JSONPsend',
 			'data': data,
-			'beforeSend': function(xhr) {
-				// Inject header in case you need special server side routing.
-				xhr.setRequestHeader('WaterSpout-Request', true);
-				return true;
-			},
-			'complete': function(response) {_rt.__onmessage(response, false);},
 			'error': _rt.__handleError
 		});
 	}
+};
+
+realtimeComm.prototype.JSONPsend = function(response) {
+	_rt.__onmessage(response, false);
+};
+
+realtimeComm.prototype.JSONPlisten = function(response) {
+	_rt.__onmessage(response, true);
 };
 
 realtimeComm.prototype.__setCallback = function(uri, callback) {
@@ -79,14 +82,9 @@ realtimeComm.prototype.__listenPolling = function(uri) {
 	jQuery.ajax({
 		'url': _rt.urlHttp + uri,
 		'type': 'POST',
-		'dataType': 'json',
+		'dataType': 'jsonp',
+		'jsonpCallback': '_rt.JSONPlisten',
 		'data': {'waterspout_cursor': _rt.cursor, 'waterspout_cookie': _rt.cookie},
-		'beforeSend': function(xhr) {
-			// Inject header in case you need special server side routing.
-			xhr.setRequestHeader('WaterSpout-Request', true);
-			return true;
-		},
-		'complete': function(response) {_rt.__onmessage(response, true);},
 		'error': _rt.__handleError
 	});
 };
@@ -102,14 +100,15 @@ realtimeComm.prototype.__listenWebSocket = function(uri) {
 realtimeComm.prototype.__onmessage = function(response, pollingRequest) {
 	if (response) {
 		var data;
-		if (typeof _rt.socketConn != 'undefined') {
-			data = response.data;
+		if (typeof _rt.socketConn != 'undefined' && response.data) {
+			data = jQuery.evalJSON(response.data);
+		} else if (response.responseText) {
+			data = jQuery.evalJSON(response.responseText);
 		} else {
-			data = response.responseText;
+			data = response;
 		}
 
 		if (data) {
-			data = jQuery.evalJSON(data);
 			if (data.cursor) {
 				_rt.cursor = data.cursor;
 				set_cookie('waterspout_cursor', _rt.cursor, 0, '/', window.location.host.substring(window.location.host.indexOf('.'), window.location.host.length), false);

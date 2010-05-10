@@ -121,7 +121,18 @@ class Locke_Handler extends Handler
 		// Write back the message. We do this first to close the connection and keep
 		// things moving along.
 		$response = new HTTPResponse(200);
-		$response->set_body(array('__URI__' => $this->uri), true);
+
+		// Determine if this is a JSONP request.
+		$body = array('__URI__' => $this->uri);
+		if ($this->request->get_request_var('callback')) 
+		{
+			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
+		}
+		else
+		{
+			$response->set_body($body, true);
+		}
+
 		$this->write($response);
 
 		if (!empty(self::$_commands))
@@ -151,7 +162,18 @@ class Locke_Handler extends Handler
 		// Write back the message. We do this first to close the connection and keep
 		// things moving along.
 		$response = new HTTPResponse(200);
-		$response->set_body(array('__URI__' => $this->uri), true);
+
+		// Determine if this is a JSONP request.
+		$body = array('__URI__' => $this->uri);
+		if ($this->request->get_request_var('callback')) 
+		{
+			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
+		}
+		else
+		{
+			$response->set_body($body, true);
+		}
+
 		$this->write($response);
 
 		if (!empty(self::$_commands))
@@ -221,16 +243,25 @@ class Locke_Handler extends Handler
 		self::$_presence = array_filter(self::$_presence, array($this, '_presence_filter'));
 
 		$response = new HTTPResponse(200);
-		$response->set_body(array('__URI__'           => $this->uri,
-		                          'ws_requests'       => self::$_ws_requests,
-		                          'ws_bytes_received' => self::$_ws_bytes_received,
-		                          'ws_bytes_sent'     => self::$_ws_bytes_sent,
-		                          'lp_requests'       => self::$_lp_requests,
-		                          'lp_bytes_received' => self::$_lp_bytes_received,
-		                          'lp_bytes_sent'     => self::$_lp_bytes_sent,
-		                          'players'           => self::$_presence
-		                          )
-		                    );
+
+		// Determine if this is a JSONP request.
+		$body = array('__URI__'           => $this->uri,
+					  'ws_requests'       => self::$_ws_requests,
+					  'ws_bytes_received' => self::$_ws_bytes_received,
+					  'ws_bytes_sent'     => self::$_ws_bytes_sent,
+					  'lp_requests'       => self::$_lp_requests,
+					  'lp_bytes_received' => self::$_lp_bytes_received,
+					  'lp_bytes_sent'     => self::$_lp_bytes_sent,
+					  'players'           => self::$_presence
+					  );
+		if ($this->request->get_request_var('callback')) 
+		{
+			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
+		}
+		else
+		{
+			$response->set_body($body, true);
+		}
 
 		$this->write($response);
 	}
@@ -257,11 +288,19 @@ class Locke_Handler extends Handler
 		}
 
 		$response = new HTTPResponse(200);
-		$response->set_body(array('__URI__'  => $this->uri,
-		                          'cursor'   => end(array_keys(self::$_commands)) + 1,
-		                          'commands' => $commands
-		                          )
-		                    );
+
+		$body = array('__URI__'  => $this->uri,
+					  'cursor'   => end(array_keys(self::$_commands)) + 1,
+					  'commands' => $commands
+					  );
+		if ($this->request->get_request_var('callback')) 
+		{
+			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
+		}
+		else
+		{
+			$response->set_body($body, true);
+		}
 
 		$this->write($response);
 
