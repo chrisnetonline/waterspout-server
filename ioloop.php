@@ -247,9 +247,9 @@ class IOLoop
 	 */
 	public function add_timeout($deadline, $callback)
 	{
-		require_once 'timeout.php';
+		require_once 'iolooptimeout.php';
 
-		$timeout = new Timeout($deadline, $callback);
+		$timeout = new IOLoop_Timeout($deadline, $callback);
 		$this->_timeouts[] = $timeout;
 	}
 

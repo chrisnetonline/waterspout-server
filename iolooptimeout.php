@@ -1,11 +1,11 @@
 <?php
 /**
- * A class representing a timeout.
+ * A class representing an IO loop timeout.
  *
  * @package Waterspout
  * @author  Scott Mattocks
  */
-class Timeout
+class IOLoop_Timeout
 {
 	/**
 	 * The deadline for calling the callback.

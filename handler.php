@@ -1,7 +1,6 @@
 <?php
 require_once 'httpresponse.php';
 require_once 'httprequest.php';
-require_once 'event.php';
 abstract class Handler
 {
 	/**

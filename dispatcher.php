@@ -3,7 +3,6 @@ require_once 'httpserver.php';
 require_once 'httpresponse.php';
 require_once 'httprequest.php';
 require_once 'handler.php';
-require_once 'event.php';
 require_once 'libs/handlers/core_handler.php';
 class Dispatcher
 {
