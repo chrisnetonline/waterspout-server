@@ -1,9 +1,9 @@
 <?php
-require_once 'httpserver.php';
-require_once 'httpresponse.php';
-require_once 'httprequest.php';
-require_once 'handler.php';
-require_once 'libs/handlers/core_handler.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httpserver.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httpresponse.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'handler.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'handlers/core_handler.php';
 class Dispatcher
 {
 	/**
@@ -84,7 +84,7 @@ class Dispatcher
 		// If there is no handler, send back a 404.
 		if (!class_exists($handler_class) &&
 		    !@file_exists($this->_config['HANDLER_PATH'] . strtolower($handler_class) . '.php') &&
-		    !@file_exists('libs/handlers/' . strtolower($handler_class) . '.php')
+		    !@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'handlers/' . strtolower($handler_class) . '.php')
 		    )
 		{
 			// Default to the static handler.
@@ -92,14 +92,14 @@ class Dispatcher
 			$handler_class = 'Static_Handler';
 
 			// Include the handler.
-			require_once 'libs/handlers/static_handler.php';
+			require_once _LIBS . DIRECTORY_SEPARATOR . 'handlers/static_handler.php';
 		}
 		else
 		{
 			// Include the handler.
-			if (@file_exists('libs/handlers/' . strtolower($handler_class) . '.php'))
+			if (@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'handlers/' . strtolower($handler_class) . '.php'))
 			{
-				require_once 'libs/handlers/' . strtolower($handler_class) . '.php';
+				require_once _LIBS . DIRECTORY_SEPARATOR . 'handlers/' . strtolower($handler_class) . '.php';
 			}
 			else
 			{

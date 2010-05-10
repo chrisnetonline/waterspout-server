@@ -1,8 +1,8 @@
 <?php
-require_once 'ioloop.php';
-require_once 'iostream.php';
-require_once 'httpconnection.php';
-require_once 'httprequest.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'ioloop.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'iostream.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httpconnection.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
 /**
  * A non-blocking, single-threaded HTTP server.
  *
@@ -256,8 +256,8 @@ class HTTPServer
 	public function profiling_shutdown()
 	{
 		$data = xhprof_disable();
-		include_once $this->config('XHPROF_ROOT') . '/xhprof_lib/utils/xhprof_lib.php';
-		include_once $this->config('XHPROF_ROOT') . '/xhprof_lib/utils/xhprof_runs.php';
+		require_once $this->config('XHPROF_ROOT') . '/xhprof_lib/utils/xhprof_lib.php';
+		require_once $this->config('XHPROF_ROOT') . '/xhprof_lib/utils/xhprof_runs.php';
 		$xhprof_runs = new XHProfRuns_Default();
 
 		$xhprof_runs->save_run($data, 'waterspout');

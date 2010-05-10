@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+# waterspout - Startup script for the WaterSpout Server
+#
+# chkconfig: - 95 15
+# description: WaterSpout daemon for realtime communication  
+# probe: false
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up. If you are running without a network, comment this out.
+[ "${NETWORKING}" = "no" ] && exit 0
+
+RETVAL=0
+progdir="/opt/waterspout/"
+prog="server.php"
+USER="ofwww"
+
+start() {
+        # Start daemons.
+	if [ -n "`/sbin/pidof -x $prog`" ]; then
+		echo -n "$prog: already running"
+		failure $"$prog start"
+		echo
+		return 1
+	fi
+        echo -n $"Starting WaterSpout: "
+	# we can't seem to use daemon here - emulate its functionality
+        su -c "$progdir$prog - $USER &" 
+	RETVAL=$?
+	usleep 100000
+	if [ -z "`/sbin/pidof -x $prog`" ]; then
+		# The child processes have died after fork()ing, e.g.
+		# because of a broken config file
+		RETVAL=1
+	fi
+	[ $RETVAL -ne 0 ] && failure $"$prog startup"
+ 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/waterspout && success $"$prog startup"
+	echo	
+	return $RETVAL
+}
+stop() {
+	RETVAL=0
+	pid=
+        # Stop daemons.
+        echo -n $"Stopping WaterSpout: "
+	pid=`/sbin/pidof -x $prog`
+	if [ -n "$pid" ]; then
+	 kill -TERM $pid
+	 sleep 1;	# Give it some time to die
+        else
+	 failure $"$prog stop"
+	 echo
+	 return 1
+        fi
+	RETVAL=$?
+	[ $RETVAL -ne 0 ] && failure $"$prog stop" 
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/waterspout && success $"$prog stop" 
+	echo
+	return $RETVAL
+}
+
+reload() {
+    echo -n $"Reloading WaterSpout: "
+        status=`/usr/bin/lynx -connect_timeout=5 -dump -width=280 http://localhost:7777/server/reloadconfig 2> /dev/null`;
+	if [ -n "$status" ]; then
+		
+        	RETVAL=0;
+		success $"$prog startup"
+	else
+
+		RETVAL=1;
+		failure $"$prog stop"
+	fi;
+	echo
+	return $RETVAL
+}
+
+restart() {
+	stop
+# wait for forked daemons to die
+	usleep 1000000
+	start
+}	
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status $prog
+		RETVAL=$?
+		;;
+	reload)
+		reload
+		;;
+	restart)
+		restart
+		;;
+	*)
+        	echo $"Usage: $0 {start|stop|reload|restart|status}"
+		exit 1
+esac
+
+exit $?
+

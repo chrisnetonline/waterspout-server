@@ -1,5 +1,5 @@
 <?php
-require_once 'httpconnection.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httpconnection.php';
 /**
  * A request made over HTTP.
  *

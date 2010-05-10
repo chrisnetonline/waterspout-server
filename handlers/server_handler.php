@@ -38,7 +38,7 @@ class Server_Handler extends Handler
 		{
 			$old_config = $this->dispatcher->get_config();
 
-			$config = include $old_config['CONFIG_PATH'];
+			$config = require _BASE . DIRECTORY_SEPARATOR . $old_config['CONFIG_PATH'];
 
 			// Check for verbosity level from the command line.
 			if (($verbose = $this->request->get_request_var('verbose')) != false)

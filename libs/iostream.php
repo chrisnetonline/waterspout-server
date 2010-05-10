@@ -1,5 +1,5 @@
 <?php
-require_once 'ioloop.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'ioloop.php';
 /**
  * A utility class to read from and write to a non-blocking stream.
  *

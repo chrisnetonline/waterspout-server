@@ -4,13 +4,15 @@ ini_set('display_errors', true);
 error_reporting(E_ALL);
 ini_set('memory_limit', '512M');
 
-// Make the __DIR__ constant available in PHP 5.2.
+// Define some paths.
 if (!defined('__DIR__'))
 {
 	define('__DIR__', dirname(__FILE__));
 }
+define('_BASE', __DIR__);
+define('_LIBS', __DIR__ . DIRECTORY_SEPARATOR . 'libs');
 
-$config = require 'config.php';
+$config = require _BASE . DIRECTORY_SEPARATOR . 'config.php';
 
 // Check for verbosity level from the command line.
 if (!empty($argc) && $argc >= 3)
@@ -22,7 +24,7 @@ if (!empty($argc) && $argc >= 3)
 	}
 }
 
-require_once 'dispatcher.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'dispatcher.php';
 $loop       = IOLoop::singleton();
 $dispatcher = new Dispatcher($config['dispatcher']);
 $server     = new HTTPServer(array($dispatcher, 'dispatch'), $loop, $config['server']);

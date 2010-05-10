@@ -1,6 +1,6 @@
 <?php
-require_once 'httpresponse.php';
-require_once 'httprequest.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httpresponse.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
 abstract class Handler
 {
 	/**

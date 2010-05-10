@@ -1,7 +1,7 @@
 <?php
-require_once 'wsrequest.php';
-require_once 'httprequest.php';
-require_once 'httpheaders.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'wsrequest.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'httpheaders.php';
 /**
  * An open connection between the client and server.
  *
