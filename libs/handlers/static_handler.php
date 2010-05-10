@@ -2,6 +2,30 @@
 class Static_Handler extends Handler
 {
 	/**
+	 * The pipe which will contain the dynamic content.
+	 *
+	 * @access private
+	 * @var    resource
+	 */
+	private $_dynamic_pipes;
+
+	/**
+	 * The process that is handling the dynamic content generation.
+	 *
+	 * @access private
+	 * @var    resource
+	 */
+	private $_dynamic_process;
+
+	/**
+	 * The dynamic content.
+	 *
+	 * @access private
+	 * @var    string
+	 */
+	private $_dynamic_content = '';
+
+	/**
 	 * Reads a file and sends the contents to the client.
 	 *
 	 * @access public
@@ -22,10 +46,10 @@ class Static_Handler extends Handler
 			{
 				$response = $this->_301('/' . $sanitized_uri . '/');
 				$this->write($response);
-				
+
 				return;
 			}
-			
+
 			$path.= $config['DEFAULT_FILENAME'];
 		}
 
@@ -48,7 +72,10 @@ class Static_Handler extends Handler
 			}
 		}
 
-		$this->write($response);
+		if ($response instanceof HTTPResponse)
+		{
+			$this->write($response);
+		}
 	}
 
 	/**
@@ -56,7 +83,7 @@ class Static_Handler extends Handler
 	 *
 	 * @access private
 	 * @param  string  $path
-	 * @return httpresponse
+	 * @return HTTPResponse
 	 */
 	private function _notfound($path)
 	{
@@ -81,19 +108,90 @@ class Static_Handler extends Handler
 	 *
 	 * @access private
 	 * @param  string  $path
-	 * @return httpresponse
+	 * @return HTTPResponse
 	 */
 	private function _found($path)
 	{
 		$config = $this->dispatcher->get_config();
-
-		$response = new HTTPResponse(200);
 
 		if (!($mime = $this->_get_mime_type($path)))
 		{
 			$finfo = finfo_open(FILEINFO_MIME_TYPE, $config['MAGIC_PATH']);
 			$mime  = finfo_file($finfo, $path);
 		}
+
+		$ext = substr($path, strrpos($path, '.') + 1);
+		if ($ext == 'php')
+		{
+			$this->_found_dynamic($path, $config, $mime);
+		}
+		else
+		{
+			return $this->_found_static($path, $config, $mime);
+		}
+	}
+
+	/**
+	 * Returns the generated contents of a dynamic file.
+	 *
+	 * @access private
+	 * @param  string  $path
+	 * @param  array   $config
+	 * @param  string  $mime
+	 * @return void
+	 */
+	private function _found_dynamic($path, array $config, $mime)
+	{
+		// Open a process to execute the content.
+		$descriptors = array(0 => array('pipe', 'r'),
+		                     1 => array('pipe', 'w'),
+		                     2 => array('file', $config['ERROR_LOG_FILE'], 'a')
+		                     );
+
+		$cwd = dirname($path);
+
+		// TODO: Figure out what to pass in as $_ENV.
+		$env     = array();
+		$pipes   = array();
+
+		$this->_dynamic_process = proc_open('php-cgi', $descriptors, $pipes, $cwd, $env);
+		$this->_dynamic_pipes   = $pipes;
+
+		// Make sure it worked.
+		if (!is_resource($this->_dynamic_process))
+		{
+			return $this->_notfound($path);
+		}
+
+		// Write the super globals to the process.
+		$setup = '<?php $_GET = ' . var_export($this->request->get_get(), true) . '; ';
+		$setup.= ' $_POST = ' . var_export($this->request->get_post(), true) . '; ';
+		$setup.= ' $_COOKIE = ' . var_export($this->request->get_cookie(), true) . '; ';
+		$setup.= ' $_REQUEST = array_merge($_COOKIE, $_POST, $_GET); $_SERVER[\'argv\'][0] = \'' . $path . '\'; $_SERVER[\'argc\'] = 1;?>';
+
+		// Send the contents of the file so that it can be executed.
+		fwrite($this->_dynamic_pipes[0], $setup . file_get_contents($path));
+
+		fclose($this->_dynamic_pipes[0]);
+
+		// Put the reading stream into the loop so that we can continue doing other
+		// stuff.
+		$loop = $this->dispatcher->get_server()->get_loop();
+		$loop->add_handler($this->_dynamic_pipes[1], array($this, 'write_dynamic'), IOLoop::READ);
+	}
+
+	/**
+	 * Returns the contents of a static file.
+	 *
+	 * @access private
+	 * @param  string  $path
+	 * @param  array   $config
+	 * @param  string  $mime
+	 * @return HTTPResponse
+	 */
+	private function _found_static($path, array $config, $mime)
+	{
+		$response = new HTTPResponse(200);
 
 		// Add the headers first so that we can set the right content length.
 		$headers = array('Content-Type'  => $mime,
@@ -105,7 +203,6 @@ class Static_Handler extends Handler
 		$response->add_headers($headers);
 
 		$response->set_body(file_get_contents($path), false);
-
 
 		return $response;
 	}
@@ -181,7 +278,93 @@ class Static_Handler extends Handler
 	 */
 	private static function _check_modified($since, $path)
 	{
-		return (strtotime(date('D, d M Y H:i:s \G\M\T', filemtime($path))) > strtotime($since));
+		$ext = substr($path, strrpos($path, '.') + 1);
+		return ($ext != 'php' &&
+		        strtotime(date('D, d M Y H:i:s \G\M\T', filemtime($path))) > strtotime($since)
+		        );
+	}
+
+	/**
+	 * Writes the dynamic contents to the response.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function write_dynamic()
+	{
+		$attempts = 0;
+
+		while ($attempts++ <= 10)
+		{
+			$chunk = fread($this->_dynamic_pipes[1], IOStream::MAX_BUFFER_SIZE);
+
+			if (!empty($chunk))
+			{
+				break;
+			}
+		}
+
+		if (empty($chunk) && empty($this->_dynamic_content))
+		{
+			// Write an error response.
+			$response = new HTTPResponse(500);
+			$response->set_body('Trouble generating content.');
+		}
+		else
+		{
+			$this->_dynamic_content.= $chunk;
+
+			// Check to see if the process has finished.
+			$info = proc_get_status($this->_dynamic_process);
+
+			if (!$info['running'])
+			{
+				// Make sure the proccess finished successfully.
+				if ($info['exitcode'] !== 0)
+				{
+					$response = new HTTPResponse(500);
+				}
+				else
+				{
+					$response = new HTTPResponse(200);
+				}
+
+				// Split the chunk into headers and content.
+				list($headers, $content) = explode("\r\n\r\n", $this->_dynamic_content, 2);
+
+				// Set the headers.
+				foreach (explode("\r\n", $headers) as $header)
+				{
+					list($h, $v) = explode(':', $header);
+					$response->add_header($h, trim($v));
+				}
+
+				// Add the body content.
+				$response->set_body($content, false);//$info['exitcode'] === 0);
+			}
+		}
+
+		if (isset($response) && $response instanceof HTTPResponse)
+		{
+			// Send the response.
+			$this->write($response);
+
+			// Remove the handler.
+			$loop = $this->dispatcher->get_server()->get_loop();
+			$loop->remove_handler($this->_dynamic_pipes[1]);
+
+			// Close all the pipes.
+			foreach ($this->_dynamic_pipes as $pipe)
+			{
+				if (is_resource($pipe))
+				{
+					fclose($pipe);
+				}
+			}
+
+			// Close the process.
+			proc_close($this->_dynamic_process);
+		}
 	}
 
 	/**

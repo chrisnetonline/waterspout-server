@@ -21,6 +21,7 @@ $config['server']['XHPROF_ROOT']         = '/var/www/html';
 $config['dispatcher']['DEFAULT_FILENAME'] = 'index.html';
 $config['dispatcher']['LOG_REQUESTS']     = false;
 $config['dispatcher']['LOG_FILE']         = $config['server']['LOG_FILE'];
+$config['dispatcher']['ERROR_LOG_FILE']   = $config['dispatcher']['LOG_FILE'];
 $config['dispatcher']['HANDLER_PATH']     = _BASE . DIRECTORY_SEPARATOR . 'handlers' . DIRECTORY_SEPARATOR;
 $config['dispatcher']['DEFAULT_TIMEZONE'] = 'America/New_York';
 $config['dispatcher']['404_MESSAGE']      = 'What are you looking for?';

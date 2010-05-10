@@ -290,6 +290,39 @@ class HTTPRequest implements Serializable
 	}
 
 	/**
+	 * Returns the array of GET variables.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function get_get()
+	{
+		return $this->get;
+	}
+
+	/**
+	 * Returns the array of POST variables.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function get_post()
+	{
+		return $this->post;
+	}
+
+	/**
+	 * Returns the array of COOKIE variables.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function get_cookie()
+	{
+		return $this->cookie;
+	}
+
+	/**
 	 * Writes data to the client. If the method returns true, the connection should be
 	 * closed.
 	 *
