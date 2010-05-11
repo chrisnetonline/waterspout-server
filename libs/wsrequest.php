@@ -94,7 +94,7 @@ class WSRequest extends HTTPRequest
 		{
 			$this->body = $decoded;
 
-			// Check for a handler in the decoded body.
+			// Check for a controller in the decoded body.
 			if (!empty($decoded->__URI__))
 			{
 				$this->set_uri($decoded->__URI__);

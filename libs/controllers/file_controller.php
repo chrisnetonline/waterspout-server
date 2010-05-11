@@ -1,5 +1,5 @@
 <?php
-class Static_Handler extends Handler
+class File_Controller extends Controller
 {
 	/**
 	 * The pipe which will contain the dynamic content.
@@ -34,9 +34,9 @@ class Static_Handler extends Handler
 	public function get()
 	{
 		// Make sure the file exists.
-		$sanitized_uri = str_replace('/static/get/', '', $this->request->get_uri());
+		$sanitized_uri = str_replace('/file/get/', '', $this->request->get_uri());
 		$config        = $this->dispatcher->get_config();
-		$path          = str_replace('/', DIRECTORY_SEPARATOR, $config['STATIC_CONTENT'] . DIRECTORY_SEPARATOR . $sanitized_uri);
+		$path          = str_replace('/', DIRECTORY_SEPARATOR, $config['WEBROOT'] . DIRECTORY_SEPARATOR . $sanitized_uri);
 
 		// If a directory was specified, try to load the default file.
 		if (is_dir($path))
@@ -87,16 +87,16 @@ class Static_Handler extends Handler
 	 */
 	private function _notfound($path)
 	{
-		$response = new HTTPResponse(404);
-
 		// Set the custom message if we have one.
 		$config = $this->dispatcher->get_config();
-		if (isset($config['404_MESSAGE']))
+		if (isset($config['404_PATH']))
 		{
-			$response->set_body($config['404_MESSAGE'] . "\r\n" . $path, false);
+			$response = $this->_found($config['404_PATH']);
+			$response->set_status(404);
 		}
 		else
 		{
+			$response = new HTTPResponse(404);
 			$response->set_body("Page not found\r\n" . $path, false);
 		}
 
@@ -154,7 +154,7 @@ class Static_Handler extends Handler
 		$env     = array();
 		$pipes   = array();
 
-		$this->_dynamic_process = proc_open('php-cgi', $descriptors, $pipes, $cwd, $env);
+		$this->_dynamic_process = proc_open('php-cgi -c ' . $config['DYNAMIC_PHP_INI'], $descriptors, $pipes, $cwd, $env);
 		$this->_dynamic_pipes   = $pipes;
 
 		// Make sure it worked.
@@ -373,7 +373,7 @@ class Static_Handler extends Handler
 	 * @access public
 	 * @return void
 	 */
-	public function process_event(Handler $handler = null)
+	public function process_event(Controller $controller = null)
 	{
 		return;
 	}

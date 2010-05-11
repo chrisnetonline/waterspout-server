@@ -1,5 +1,5 @@
 <?php
-class Locke_Handler extends Handler
+class Locke_Controller extends Controller
 {
 	/**
 	 * The maximum number of commands to store on the move stack.
@@ -124,7 +124,7 @@ class Locke_Handler extends Handler
 
 		// Determine if this is a JSONP request.
 		$body = array('__URI__' => $this->uri);
-		if ($this->request->get_request_var('callback')) 
+		if ($this->request->get_request_var('callback'))
 		{
 			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
 		}
@@ -165,7 +165,7 @@ class Locke_Handler extends Handler
 
 		// Determine if this is a JSONP request.
 		$body = array('__URI__' => $this->uri);
-		if ($this->request->get_request_var('callback')) 
+		if ($this->request->get_request_var('callback'))
 		{
 			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
 		}
@@ -254,7 +254,7 @@ class Locke_Handler extends Handler
 					  'lp_bytes_sent'     => self::$_lp_bytes_sent,
 					  'players'           => self::$_presence
 					  );
-		if ($this->request->get_request_var('callback')) 
+		if ($this->request->get_request_var('callback'))
 		{
 			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
 		}
@@ -272,7 +272,7 @@ class Locke_Handler extends Handler
 	 * @access public
 	 * @return void
 	 */
-	public function process_event(Handler $mover = null)
+	public function process_event(Controller $mover = null)
 	{
 		$key = array_search((int) $this->_cursor, array_keys(self::$_commands));
 		if ($key === false && !is_null($this->_cursor))
@@ -293,7 +293,7 @@ class Locke_Handler extends Handler
 					  'cursor'   => end(array_keys(self::$_commands)) + 1,
 					  'commands' => $commands
 					  );
-		if ($this->request->get_request_var('callback')) 
+		if ($this->request->get_request_var('callback'))
 		{
 			$response->set_body($this->request->get_request_var('callback') . '(' . json_encode($body) . ');', false);
 		}

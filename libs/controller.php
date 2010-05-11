@@ -1,7 +1,7 @@
 <?php
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httpresponse.php';
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
-abstract class Handler
+abstract class Controller
 {
 	/**
 	 * The request object from the dispatcher.
@@ -86,7 +86,7 @@ abstract class Handler
 			$this->close();
 		}
 
-		if ($config['LOG_REQUESTS'])
+		if ($config['VERBOSE'] >= 1)
 		{
 			$this->dispatcher->log($this->request, $response);
 		}
@@ -104,7 +104,7 @@ abstract class Handler
 	}
 
 	/**
-	 * Closes the connection and removes the handler from the listeners.
+	 * Closes the connection and removes the controller from the listeners.
 	 *
 	 * @access public
 	 * @return void
@@ -123,6 +123,6 @@ abstract class Handler
 	 * @access public
 	 * @return void
 	 */
-	abstract public function process_event(Handler $handler = null);
+	abstract public function process_event(Controller $controller = null);
 }
 ?>

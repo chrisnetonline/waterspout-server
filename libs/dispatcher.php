@@ -2,8 +2,8 @@
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httpserver.php';
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httpresponse.php';
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
-require_once _LIBS . DIRECTORY_SEPARATOR . 'handler.php';
-require_once _LIBS . DIRECTORY_SEPARATOR . 'handlers/core_handler.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'controller.php';
+require_once _LIBS . DIRECTORY_SEPARATOR . 'controllers/core_controller.php';
 class Dispatcher
 {
 	/**
@@ -63,7 +63,7 @@ class Dispatcher
 	}
 
 	/**
-	 * Dispatches an incoming request to the appropriate handler.
+	 * Dispatches an incoming request to the appropriate controller.
 	 *
 	 * @access public
 	 * @param  HTTPRequest $request
@@ -78,48 +78,49 @@ class Dispatcher
 			return;
 		}
 
-		// Figure out which handler should be called.
-		$handler_class = $request->get_handler_class() . '_Handler';
+		// Figure out which controller should be called.
+		$controller_class = $request->get_controller_class() . '_Controller';
 
-		// If there is no handler, send back a 404.
-		if (!class_exists($handler_class) &&
-		    !@file_exists($this->_config['HANDLER_PATH'] . strtolower($handler_class) . '.php') &&
-		    !@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'handlers/' . strtolower($handler_class) . '.php')
+		// If there is no controller specified, assume the request was for file
+		// content.
+		if (!class_exists($controller_class) &&
+		    !@file_exists($this->_config['CONTROLLER_PATH'] . strtolower($controller_class) . '.php') &&
+		    !@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'controllers/' . strtolower($controller_class) . '.php')
 		    )
 		{
-			// Default to the static handler.
-			$request->set_uri('/static/get' . $request->get_uri());
-			$handler_class = 'Static_Handler';
+			// Default to the file controller.
+			$request->set_uri('/file/get' . $request->get_uri());
+			$controller_class = 'File_Controller';
 
-			// Include the handler.
-			require_once _LIBS . DIRECTORY_SEPARATOR . 'handlers/static_handler.php';
+			// Include the controller.
+			require_once _LIBS . DIRECTORY_SEPARATOR . 'controllers/file_controller.php';
 		}
 		else
 		{
-			// Include the handler.
-			if (@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'handlers/' . strtolower($handler_class) . '.php'))
+			// Include the controller.
+			if (@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'controllers/' . strtolower($controller_class) . '.php'))
 			{
-				require_once _LIBS . DIRECTORY_SEPARATOR . 'handlers/' . strtolower($handler_class) . '.php';
+				require_once _LIBS . DIRECTORY_SEPARATOR . 'controllers/' . strtolower($controller_class) . '.php';
 			}
 			else
 			{
-				require_once $this->_config['HANDLER_PATH'] . strtolower($handler_class) . '.php';
+				require_once $this->_config['CONTROLLER_PATH'] . strtolower($controller_class) . '.php';
 			}
 		}
 
 		// Make sure the requested method exists.
-		$method = $request->get_handler_method();
-		if (empty($method) || !method_exists($handler_class, $method))
+		$method = $request->get_controller_method();
+		if (empty($method) || !method_exists($controller_class, $method))
 		{
 			// No good. Get this clown out of here.
 			$this->_four_o_four($request);
 			return;
 		}
 
-		$handler = new $handler_class($request, $this);
+		$controller = new $controller_class($request, $this);
 
 		// Handle the request.
-		call_user_func(array($handler, $method));
+		call_user_func(array($controller, $method));
 
 		// Clean up dead listeners.
 		if ($this->_config['CLEANUP_INTERVAL'] > 0)
@@ -169,8 +170,8 @@ class Dispatcher
 	 */
 	private function _four_o_four(HTTPRequest $request)
 	{
-		$handler = new Core_Handler($request, $this);
-		$handler->four_o_four();
+		$controller = new Core_Controller($request, $this);
+		$controller->four_o_four();
 	}
 
 	/**
@@ -181,20 +182,20 @@ class Dispatcher
 	 */
 	public function _options(HTTPRequest $request)
 	{
-		$handler = new Core_Handler($request, $this);
-		$handler->options();
+		$controller = new Core_Controller($request, $this);
+		$controller->options();
 	}
 
 	/**
 	 * Adds a new listener to the set of open connections.
 	 *
 	 * @access public
-	 * @param  Handler $handler
+	 * @param  Controller $controller
 	 * @return void
 	 */
-	public function add_listener(Handler $handler)
+	public function add_listener(Controller $controller)
 	{
-		$this->_listeners[spl_object_hash($handler)] = $handler;
+		$this->_listeners[spl_object_hash($controller)] = $controller;
 	}
 
 	/**
@@ -203,9 +204,9 @@ class Dispatcher
 	 * @access public
 	 * @return void
 	 */
-	public function remove_listener(Handler $handler)
+	public function remove_listener(Controller $controller)
 	{
-		unset($this->_listeners[spl_object_hash($handler)]);
+		unset($this->_listeners[spl_object_hash($controller)]);
 	}
 
 	/**
@@ -225,11 +226,11 @@ class Dispatcher
 	 * @access public
 	 * @return void
 	 */
-	public function notify_listeners(Handler $handler = null)
+	public function notify_listeners(Controller $controller = null)
 	{
 		foreach ($this->_listeners as $listener)
 		{
-			$listener->process_event($handler);
+			$listener->process_event($controller);
 		}
 
 		// Put this call back in the loop.
@@ -245,7 +246,7 @@ class Dispatcher
 	public function timeout_listeners()
 	{
 		$response = new HTTPResponse(408);
-		$response->set_body('Server shutting down', false);
+		$response->set_body('Request Timeout', false);
 
 		foreach ($this->_listeners as $listener)
 		{

@@ -1,5 +1,5 @@
 <?php
-class Core_Handler extends Handler
+class Core_Controller extends Controller
 {
 	/**
 	 * Just performs a handshake.
@@ -75,7 +75,7 @@ class Core_Handler extends Handler
 	 * @access public
 	 * @return void
 	 */
-	public function process_event(Handler $handler = null)
+	public function process_event(Controller $controller = null)
 	{
 		return;
 	}

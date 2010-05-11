@@ -145,28 +145,28 @@ class HTTPRequest implements Serializable
 	protected $finish_time;
 
 	/**
-	 * The classname of the handler that should handle the request.
+	 * The classname of the controller that should handle the request.
 	 *
 	 * @access protected
 	 * @var    string
 	 */
-	protected $handler_class;
+	protected $controller_class;
 
 	/**
-	 * The method of the handler that should handle the request.
+	 * The method of the controller that should handle the request.
 	 *
 	 * @access protected
 	 * @var    string
 	 */
-	protected $handler_method;
+	protected $controller_method;
 
 	/**
-	 * The arguments for the handler method.
+	 * The arguments for the controller method.
 	 *
 	 * @access protected
 	 * @var    string
 	 */
-	protected $handler_args;
+	protected $controller_args;
 
 	/**
 	 * Constructor.
@@ -563,16 +563,16 @@ class HTTPRequest implements Serializable
 		if (!empty($uri))
 		{
 			$parts = explode('/', ltrim($uri, '/'), 3);
-			$this->handler_class = $parts[0];
+			$this->controller_class = $parts[0];
 
 			if (!empty($parts[1]))
 			{
-				$this->handler_method = $parts[1];
+				$this->controller_method = $parts[1];
 			}
 
 			if (!empty($parts[2]))
 			{
-				$this->handler_args = $parts[2];
+				$this->controller_args = $parts[2];
 			}
 		}
 	}
@@ -611,36 +611,36 @@ class HTTPRequest implements Serializable
 	}
 
 	/**
-	 * Returns the handler class for the request.
+	 * Returns the controller class for the request.
 	 *
 	 * @access public
 	 * @return string
 	 */
-	public function get_handler_class()
+	public function get_controller_class()
 	{
-		return $this->handler_class;
+		return $this->controller_class;
 	}
 
 	/**
-	 * Returns the handler method for the request.
+	 * Returns the controller method for the request.
 	 *
 	 * @access public
 	 * @return string
 	 */
-	public function get_handler_method()
+	public function get_controller_method()
 	{
-		return $this->handler_method;
+		return $this->controller_method;
 	}
 
 	/**
-	 * Returns the handler args for the request.
+	 * Returns the controller args for the request.
 	 *
 	 * @access public
 	 * @return string
 	 */
-	public function get_handler_args()
+	public function get_controller_args()
 	{
-		return $this->handler_args;
+		return $this->controller_args;
 	}
 
 	/**
