@@ -83,7 +83,7 @@ class HTTPResponse
 	public function set_default_headers()
 	{
 		$headers = array('Content-Length' => $this->_get_content_length(),
-		                 'Server'         => 'Waterspout/0.6-alpha',
+		                 'Server'         => 'WaterSpout/0.6-alpha',
 		                 'Connection'     => 'close',
 		                 'Date'           => date('D, d M Y H:i:s \G\M\T')
 		                 );
