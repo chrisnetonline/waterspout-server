@@ -42,6 +42,16 @@ $config['server']['TIMING'] = false;
 // The XHProf root directory.
 $config['server']['XHPROF_ROOT'] = '/var/www/html';
 
+// The file containing blocked IP addresses. The file should return an array of IP
+// addresses. If a white list is defined, the black list will be ignored. Updating this
+// file requires a restart of the server.
+$config['server']['IP_BLACKLIST'] = _BASE . DIRECTORY_SEPARATOR . 'ipblacklist.php';
+
+// The file containing white listed IP addresses. The file should return an array of IP
+// addresses. If this file returns anything, the black list will be ignored. Updating
+// this file, requires a restart of the server.
+// $config['server']['IP_WHITELIST'] = _BASE . DIRECTORY_SEPARATOR . 'ipwhitelist.php';
+
 /**
  * Dispatcher values.
  *

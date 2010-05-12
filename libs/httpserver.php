@@ -52,6 +52,22 @@ class HTTPServer
 	private $_restart = false;
 
 	/**
+	 * A white list of acceptable IP addresses.
+	 *
+	 * @access private
+	 * @var    array
+	 */
+	private $_ip_whitelist = array();
+
+	/**
+	 * A black list of unacceptable IP addresses.
+	 *
+	 * @access private
+	 * @var    array
+	 */
+	private $_ip_blacklist = array();
+
+	/**
 	 * Constructor.
 	 *
 	 * @access public
@@ -65,6 +81,26 @@ class HTTPServer
 		$this->_request_callback = $request_callback;
 		$this->_loop             = $io_loop;
 		$this->_config           = $config;
+
+		// Check for a white list of IP addresses.
+		if (isset($this->_config['IP_WHITELIST']) && @file_exists($this->_config['IP_WHITELIST']))
+		{
+			$whitelist = include_once $this->_config['IP_WHITELIST'];
+			if (is_array($whitelist) && !empty($whitelist))
+			{
+				$this->_ip_whitelist = $whitelist;
+			}
+		}
+
+		// Check for a black list of IP addresses.
+		if (empty($this->_ip_whitelist) && isset($this->_config['IP_BLACKLIST']) && @file_exists($this->_config['IP_BLACKLIST']))
+		{
+			$blacklist = include_once $this->_config['IP_BLACKLIST'];
+			if (is_array($blacklist) && !empty($blacklist))
+			{
+				$this->_ip_blacklist = $blacklist;
+			}
+		}
 
 		// Add a profiling if the config calls for it.
 		if (!empty($this->_config['TIMING']) && function_exists('xhprof_enable'))
@@ -183,6 +219,14 @@ class HTTPServer
 			return;
 		}
 
+		// Check for white/black list matching.
+		if (!$this->_whitelisted($address) ||
+		    $this->_blacklisted($address)
+		    )
+		{
+			return;
+		}
+
 		// Open up a new stream to the client.
 		$stream  = new IOStream($connection, $this->_loop);
 
@@ -261,6 +305,56 @@ class HTTPServer
 		$xhprof_runs = new XHProfRuns_Default();
 
 		$xhprof_runs->save_run($data, 'waterspout');
+	}
+
+	/**
+	 * Checks to see if the given address has been white listed.
+	 *
+	 * @access private
+	 * @param  string  $address
+	 * @return boolean
+	 */
+	private function _whitelisted($address)
+	{
+		if (empty($this->_ip_whitelist))
+		{
+			return true;
+		}
+
+		foreach ($this->_ip_whitelist as $ip)
+		{
+			if (strpos($address, $ip) === 0)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks to see if the given address has been black listed.
+	 *
+	 * @access private
+	 * @param  string  $address
+	 * @return boolean
+	 */
+	private function _blacklisted($address)
+	{
+		if (empty($this->_ip_blacklist))
+		{
+			return false;
+		}
+
+		foreach ($this->_ip_blacklist as $ip)
+		{
+			if (strpos($address, $ip) === 0)
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
 ?>
