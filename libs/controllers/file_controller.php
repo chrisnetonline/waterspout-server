@@ -2,30 +2,6 @@
 class File_Controller extends Controller
 {
 	/**
-	 * The pipe which will contain the dynamic content.
-	 *
-	 * @access private
-	 * @var    resource
-	 */
-	private $_dynamic_pipes;
-
-	/**
-	 * The process that is handling the dynamic content generation.
-	 *
-	 * @access private
-	 * @var    resource
-	 */
-	private $_dynamic_process;
-
-	/**
-	 * The dynamic content.
-	 *
-	 * @access private
-	 * @var    string
-	 */
-	private $_dynamic_content = '';
-
-	/**
 	 * Reads a file and sends the contents to the client.
 	 *
 	 * @access public
@@ -38,8 +14,10 @@ class File_Controller extends Controller
 		$config        = $this->dispatcher->get_config();
 		$path          = str_replace('/', DIRECTORY_SEPARATOR, $config['WEBROOT'] . DIRECTORY_SEPARATOR . $sanitized_uri);
 
+		$this->_path = $path;
+
 		// If a directory was specified, try to load the default file.
-		if (is_dir($path))
+		if (is_dir($this->_path))
 		{
 			// If there is no trailing slash, add one.
 			if (!empty($sanitized_uri) && substr($sanitized_uri, -1) != '/')
@@ -50,25 +28,25 @@ class File_Controller extends Controller
 				return;
 			}
 
-			$path.= $config['DEFAULT_FILENAME'];
+			$this->_path.= $config['DEFAULT_FILENAME'];
 		}
 
-		if (!file_exists($path))
+		if (!file_exists($this->_path))
 		{
-			$response = $this->_notfound($path);
+			$response = $this->_notfound();
 		}
 		else
 		{
 			// Check to see if the file has been modified since it was last sent.
 			if ($this->request->get_headers()->get('If-Modified-Since') &&
-			    !self::_check_modified($this->request->get_headers()->get('If-Modified-Since'), $path)
+			    !$this->_check_modified($this->request->get_headers()->get('If-Modified-Since'), $this->_path)
 			    )
 			{
-				$response = $this->_304($path);
+				$response = $this->_304();
 			}
 			else
 			{
-				$response = $this->_found($path);
+				$response = $this->_found();
 			}
 		}
 
@@ -82,52 +60,53 @@ class File_Controller extends Controller
 	 * Returns a 404 response.
 	 *
 	 * @access private
-	 * @param  string  $path
 	 * @return HTTPResponse
 	 */
-	private function _notfound($path)
+	private function _notfound()
 	{
 		// Set the custom message if we have one.
 		$config = $this->dispatcher->get_config();
 		if (isset($config['404_PATH']))
 		{
-			$response = $this->_found($config['404_PATH']);
-			$response->set_status(404);
+			$this->_path  = $config['404_PATH'];
+			$this->status = 404;
+			$this->_found();
 		}
 		else
 		{
 			$response = new HTTPResponse(404);
-			$response->set_body("Page not found\r\n" . $path, false);
-		}
+			$response->set_body("Page not found\r\n" . $this->_path, false);
 
-		return $response;
+			return $response;
+		}
 	}
 
 	/**
 	 * Returns a response containing the contents of the requested file.
 	 *
 	 * @access private
-	 * @param  string  $path
 	 * @return HTTPResponse
 	 */
-	private function _found($path)
+	private function _found()
 	{
 		$config = $this->dispatcher->get_config();
 
-		if (!($mime = $this->_get_mime_type($path)))
+		if (!($mime = $this->_get_mime_type()))
 		{
 			$finfo = finfo_open(FILEINFO_MIME_TYPE, $config['MAGIC_PATH']);
-			$mime  = finfo_file($finfo, $path);
+			$mime  = finfo_file($finfo, $this->_path);
 		}
 
-		$ext = substr($path, strrpos($path, '.') + 1);
+		$this->_mime = $mime;
+
+		$ext = substr($this->_path, strrpos($this->_path, '.') + 1);
 		if ($ext == 'php')
 		{
-			$this->_found_dynamic($path, $config, $mime);
+			return $this->_found_dynamic();
 		}
 		else
 		{
-			return $this->_found_static($path, $config, $mime);
+			return $this->_found_static();
 		}
 	}
 
@@ -135,75 +114,54 @@ class File_Controller extends Controller
 	 * Returns the generated contents of a dynamic file.
 	 *
 	 * @access private
-	 * @param  string  $path
-	 * @param  array   $config
-	 * @param  string  $mime
-	 * @return void
+	 * @return mixed
 	 */
-	private function _found_dynamic($path, array $config, $mime)
+	private function _found_dynamic()
 	{
-		// Open a process to execute the content.
-		$descriptors = array(0 => array('pipe', 'r'),
-		                     1 => array('pipe', 'w'),
-		                     2 => array('file', $config['ERROR_LOG_FILE'], 'a')
-		                     );
+		// Background the process.
+		$config  = $this->dispatcher->get_config();
+		$command = 'php-cgi -c ' . $config['DYNAMIC_PHP_INI'];
+		$pipe    = $this->background($command, true);
 
-		$cwd = dirname($path);
-
-		// TODO: Figure out what to pass in as $_ENV.
-		$env   = array();
-		$pipes = array();
-
-		$this->_dynamic_process = proc_open('php-cgi -c ' . $config['DYNAMIC_PHP_INI'], $descriptors, $pipes, $cwd, $env);
-		$this->_dynamic_pipes   = $pipes;
-
-		// Make sure it worked.
-		if (!is_resource($this->_dynamic_process))
+		// If we couldn't open the process, freak out.
+		if (!is_resource($pipe))
 		{
-			return $this->_notfound($path);
+			return $this->_notfound();
 		}
 
 		// Write the super globals to the process.
 		$setup = '<?php $_GET = ' . var_export($this->request->get_get(), true) . '; ';
-		$setup.= ' $_POST = ' . var_export($this->request->get_post(), true) . '; ';
-		$setup.= ' $_COOKIE = ' . var_export($this->request->get_cookie(), true) . '; ';
-		$setup.= ' $_REQUEST = array_merge($_COOKIE, $_POST, $_GET); $_SERVER[\'argv\'][0] = \'' . $path . '\'; $_SERVER[\'argc\'] = 1;?>';
+		$setup.= ' $_POST = '     . var_export($this->request->get_post(), true) . '; ';
+		$setup.= ' $_COOKIE = '   . var_export($this->request->get_cookie(), true) . '; ';
+		$setup.= ' $_REQUEST = array_merge($_COOKIE, $_POST, $_GET); ';
+		$setup.= ' $_SERVER[\'SCRIPT_NAME\'] = \'' . basename($this->_path) . '\';?>';
 
 		// Send the contents of the file so that it can be executed.
-		fwrite($this->_dynamic_pipes[0], $setup . file_get_contents($path));
-		fclose($this->_dynamic_pipes[0]);
-
-		// Put the reading stream into the loop so that we can continue doing other
-		// stuff.
-		$loop = $this->dispatcher->get_server()->get_loop();
-		$loop->add_handler($this->_dynamic_pipes[1], array($this, 'write_dynamic'), IOLoop::READ);
+		fwrite($pipe, $setup . file_get_contents($this->_path));
+		fclose($pipe);
 	}
 
 	/**
 	 * Returns the contents of a static file.
 	 *
 	 * @access private
-	 * @param  string  $path
-	 * @param  array   $config
-	 * @param  string  $mime
-	 * @return HTTPResponse
+	 * @return mixed
 	 */
-	private function _found_static($path, array $config, $mime)
+	private function _found_static()
 	{
-		$response = new HTTPResponse(200);
+		// Background the process.
+		// The command for windows is different.
+		$command = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? 'type' : 'cat';
+		$pipe    = $this->background($command . ' ' . $this->_path);
 
-		// Add the headers first so that we can set the right content length.
-		$headers = array('Content-Type'  => $mime,
-		                 'Date'          => date('D, d M Y H:i:s \G\M\T'),
-		                 'Expires'       => date('D, d M Y H:i:s \G\M\T', time() + $config['CACHE_EXPIRATION']),
-		                 'Last-Modified' => date('D, d M Y H:i:s \G\M\T', filemtime($path)),
-		                 'Cache-Control' => 'max-age=' . $config['CACHE_EXPIRATION']
-		                 );
-		$response->add_headers($headers);
+		// If we couldn't open the process, freak out.
+		if (!is_resource($pipe))
+		{
+			return $this->_notfound();
+		}
 
-		$response->set_body(file_get_contents($path), false);
-
-		return $response;
+		// Close the pipe.
+		fclose($pipe);
 	}
 
 	/**
@@ -225,10 +183,9 @@ class File_Controller extends Controller
 	 * Sends a 304 not modified response.
 	 *
 	 * @access private
-	 * @param  string $path
 	 * @return httpresponse
 	 */
-	private function _304($path)
+	private function _304()
 	{
 		$config = $this->dispatcher->get_config();
 
@@ -236,7 +193,7 @@ class File_Controller extends Controller
 
 		$headers = array('Date'          => date('D, d M Y H:i:s \G\M\T'),
 		                 'Expires'       => date('D, d M Y H:i:s \G\M\T', time() + $config['CACHE_EXPIRATION']),
-		                 'Last-Modified' => date('D, d M Y H:i:s \G\M\T', filemtime($path)),
+		                 'Last-Modified' => date('D, d M Y H:i:s \G\M\T', filemtime($this->_path)),
 		                 'Cache-Control' => 'max-age=' . $config['CACHE_EXPIRATION']
 		                 );
 		$response->add_headers($headers);
@@ -248,15 +205,14 @@ class File_Controller extends Controller
 	 * Determines content type from extension.
 	 *
 	 * @access private
-	 * @param  string  $path
 	 * @return string
 	 */
-	private function _get_mime_type($path)
+	private function _get_mime_type()
 	{
 		$config = $this->dispatcher->get_config();
 		$types  = $config['MIME'];
 
-		$ext = substr($path, strrpos($path, '.') + 1);
+		$ext = substr($this->_path, strrpos($this->_path, '.') + 1);
 
 		if (array_key_exists($ext, $types))
 		{
@@ -269,101 +225,16 @@ class File_Controller extends Controller
 	/**
 	 * Compares the modified since header with the modification time of the file.
 	 *
-	 * @static
 	 * @access private
 	 * @param  string  $since
-	 * @param  string  $path
 	 * @return boolean
 	 */
-	private static function _check_modified($since, $path)
+	private function _check_modified($since)
 	{
-		$ext = substr($path, strrpos($path, '.') + 1);
+		$ext = substr($this->_path, strrpos($this->_path, '.') + 1);
 		return ($ext != 'php' &&
-		        strtotime(date('D, d M Y H:i:s \G\M\T', filemtime($path))) > strtotime($since)
+		        strtotime(date('D, d M Y H:i:s \G\M\T', filemtime($this->_path))) > strtotime($since)
 		        );
-	}
-
-	/**
-	 * Writes the dynamic contents to the response.
-	 *
-	 * @access public
-	 * @return void
-	 */
-	public function write_dynamic()
-	{
-		$attempts = 0;
-
-		while ($attempts++ <= 10)
-		{
-			$chunk = fread($this->_dynamic_pipes[1], IOStream::MAX_BUFFER_SIZE);
-
-			if (!empty($chunk))
-			{
-				break;
-			}
-		}
-
-		if (empty($chunk) && empty($this->_dynamic_content))
-		{
-			// Write an error response.
-			$response = new HTTPResponse(500);
-			$response->set_body('Trouble generating content.');
-		}
-		else
-		{
-			$this->_dynamic_content.= $chunk;
-
-			// Check to see if the process has finished.
-			$info = proc_get_status($this->_dynamic_process);
-
-			if (!$info['running'])
-			{
-				// Make sure the proccess finished successfully.
-				if ($info['exitcode'] !== 0)
-				{
-					$response = new HTTPResponse(500);
-				}
-				else
-				{
-					$response = new HTTPResponse(200);
-				}
-
-				// Split the chunk into headers and content.
-				list($headers, $content) = explode("\r\n\r\n", $this->_dynamic_content, 2);
-
-				// Set the headers.
-				foreach (explode("\r\n", $headers) as $header)
-				{
-					list($h, $v) = explode(':', $header);
-					$response->add_header($h, trim($v));
-				}
-
-				// Add the body content.
-				$response->set_body($content, false);//$info['exitcode'] === 0);
-			}
-		}
-
-		if (isset($response) && $response instanceof HTTPResponse)
-		{
-			// Send the response.
-			$this->write($response);
-
-			// Remove the handler.
-			$loop = $this->dispatcher->get_server()->get_loop();
-			$loop->remove_handler($this->_dynamic_pipes[1]);
-
-			// Close all the pipes.
-			foreach ($this->_dynamic_pipes as $pipe)
-			{
-				if (is_resource($pipe))
-				{
-					fclose($pipe);
-				}
-			}
-
-			// Close the process.
-			proc_close($this->_dynamic_process);
-		}
 	}
 
 	/**

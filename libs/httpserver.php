@@ -184,14 +184,14 @@ class HTTPServer
 		// Close the socket connection.
 		foreach ($this->_sockets as $socket)
 		{
-			socket_close($socket);
+			@socket_close($socket);
 		}
 
 		// Check if we need to restart.
 		if ($this->_restart)
 		{
 			$cmd = 'php ' . join(' ', $GLOBALS['argv']);
-			if (substr(php_uname(), 0, 7) == 'Windows')
+			if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 			{
 				die(pclose(popen('start ' . $cmd, 'r')));
 			}

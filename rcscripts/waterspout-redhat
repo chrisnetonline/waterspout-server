@@ -3,7 +3,7 @@
 # waterspout - Startup script for the WaterSpout Server
 #
 # chkconfig: - 95 15
-# description: WaterSpout daemon for realtime communication  
+# description: WaterSpout daemon for realtime communication
 # probe: false
 
 # Source function library.
@@ -16,8 +16,9 @@
 [ "${NETWORKING}" = "no" ] && exit 0
 
 RETVAL=0
-progdir="/opt/waterspout/"
+progdir="./"
 prog="server.php"
+host="localhost:7777"
 USER="ofwww"
 
 start() {
@@ -30,7 +31,7 @@ start() {
 	fi
         echo -n $"Starting WaterSpout: "
 	# we can't seem to use daemon here - emulate its functionality
-        su -c "$progdir$prog - $USER &" 
+        su -c "$progdir$prog - $USER &"
 	RETVAL=$?
 	usleep 100000
 	if [ -z "`/sbin/pidof -x $prog`" ]; then
@@ -40,7 +41,7 @@ start() {
 	fi
 	[ $RETVAL -ne 0 ] && failure $"$prog startup"
  	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/waterspout && success $"$prog startup"
-	echo	
+	echo
 	return $RETVAL
 }
 stop() {
@@ -50,7 +51,7 @@ stop() {
         echo -n $"Stopping WaterSpout: "
 	pid=`/sbin/pidof -x $prog`
 	if [ -n "$pid" ]; then
-	 kill -TERM $pid
+	 curl -s "http://$host/core/stop"
 	 sleep 1;	# Give it some time to die
         else
 	 failure $"$prog stop"
@@ -58,8 +59,8 @@ stop() {
 	 return 1
         fi
 	RETVAL=$?
-	[ $RETVAL -ne 0 ] && failure $"$prog stop" 
-	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/waterspout && success $"$prog stop" 
+	[ $RETVAL -ne 0 ] && failure $"$prog stop"
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/waterspout && success $"$prog stop"
 	echo
 	return $RETVAL
 }
@@ -68,7 +69,7 @@ reload() {
     echo -n $"Reloading WaterSpout: "
         status=`/usr/bin/lynx -connect_timeout=5 -dump -width=280 http://localhost:7777/server/reloadconfig 2> /dev/null`;
 	if [ -n "$status" ]; then
-		
+
         	RETVAL=0;
 		success $"$prog startup"
 	else
@@ -85,7 +86,7 @@ restart() {
 # wait for forked daemons to die
 	usleep 1000000
 	start
-}	
+}
 
 # See how we were called.
 case "$1" in

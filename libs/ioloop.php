@@ -73,9 +73,10 @@ class IOLoop
 	 * @param  resource $socket
 	 * @param  callback $callback
 	 * @param  integer  $events
+	 * @param  array    $args
 	 * @return integer
 	 */
-	public function add_handler($socket, $callback, $events)
+	public function add_handler($socket, $callback, $events, array $args = null)
 	{
 		if (!is_resource($socket))
 		{
@@ -83,9 +84,16 @@ class IOLoop
 			throw new RuntimeException('Non resource socket added to loop.');
 		}
 
+		// Make sure the additonal args are an array.
+		if (!is_array($args))
+		{
+			$args = array();
+		}
+
 		$this->_handlers[(string) $socket] = array('socket'   => $socket,
 		                                           'callback' => $callback,
-		                                           'events'   => $events | self::ERROR
+		                                           'events'   => $events | self::ERROR,
+		                                           'args'     => $args
 		                                           );
 
 		return count($this->_handlers);
@@ -192,17 +200,17 @@ class IOLoop
 			{
 				if (in_array($handler['socket'], $error))
 				{
-					call_user_func($handler['callback'], $handler['socket'], self::ERROR);
+					call_user_func_array($handler['callback'], array_merge(array($handler['socket'], self::ERROR), $handler['args']));
 				}
 				else
 				{
 					if (in_array($handler['socket'], $read))
 					{
-						call_user_func($handler['callback'], $handler['socket'], self::READ);
+						call_user_func_array($handler['callback'], array_merge(array($handler['socket'], self::READ), $handler['args']));
 					}
 					if (in_array($handler['socket'], $write))
 					{
-						call_user_func($handler['callback'], $handler['socket'], self::WRITE);
+						call_user_func_array($handler['callback'], array_merge(array($handler['socket'], self::WRITE), $handler['args']));
 					}
 				}
 			}

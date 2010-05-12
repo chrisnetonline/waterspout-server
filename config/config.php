@@ -39,7 +39,7 @@ $config['server']['LOG_FILE'] = '/tmp/waterspout';
 // classes and methods before doing any profiling.
 $config['server']['TIMING'] = false;
 
-// The XHProf root directory.
+// The XHProf root directory. This directory should contain xhprof_lib.
 $config['server']['XHPROF_ROOT'] = '/var/www/html';
 
 // The file containing blocked IP addresses. The file should return an array of IP

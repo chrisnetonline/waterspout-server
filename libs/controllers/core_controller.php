@@ -70,6 +70,31 @@ class Core_Controller extends Controller
 	}
 
 	/**
+	 * Stops the server cleanly.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function stop()
+	{
+		if (strpos($this->request->get_remote_ip(), '127.0.0.') === 0)
+		{
+			// Send back a success message. We may not be successful, but this is our
+			// last chance to send anything.
+			$response = new HTTPResponse(200);
+			$response->set_body('Server shut down.');
+
+			$this->write($response);
+
+			// Close all listeners.
+			$this->dispatcher->close_listeners();
+
+			// Stop the server loop.
+			$this->dispatcher->get_server()->stop(time() - 1);
+		}
+	}
+
+	/**
 	 * Processes the given event.
 	 *
 	 * @access public
