@@ -151,8 +151,8 @@ class File_Controller extends Controller
 		$cwd = dirname($path);
 
 		// TODO: Figure out what to pass in as $_ENV.
-		$env     = array();
-		$pipes   = array();
+		$env   = array();
+		$pipes = array();
 
 		$this->_dynamic_process = proc_open('php-cgi -c ' . $config['DYNAMIC_PHP_INI'], $descriptors, $pipes, $cwd, $env);
 		$this->_dynamic_pipes   = $pipes;
@@ -171,7 +171,6 @@ class File_Controller extends Controller
 
 		// Send the contents of the file so that it can be executed.
 		fwrite($this->_dynamic_pipes[0], $setup . file_get_contents($path));
-
 		fclose($this->_dynamic_pipes[0]);
 
 		// Put the reading stream into the loop so that we can continue doing other

@@ -1,5 +1,4 @@
 <?php
-
 return array('txt'  => 'text/plain',
 			 'htm'  => 'text/html',
 			 'html' => 'text/html',
