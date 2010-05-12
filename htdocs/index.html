@@ -2,19 +2,33 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-	<title>WaterSpout</title>
+	<title>WaterSpout Server</title>
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
 	<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
 	<style type="text/css">
-	body {
-		font-family:Arial;
-		text-align:center;
-	}
+	body {font-family:Arial; text-align:center; font-size:14px;}
+	a {text-decoration:none; color:#23819d;}
+	a:hover {text-decoration:underline;}
+	#description {width:700px; text-align:left; margin:0 auto; border:1px solid #CCC; background-color:#F0F0F0; -moz-border-radius:10px; -webkit-border-radius:10px;}
+	#description div {padding:10px 15px 10px 15px;}
+	#links span {padding:0 5px 0 5px;}
 	</style>
 </head>
 <body>
-	<img src="/images/waterspout.png" alt="Waterspout" />
-	<p>Project source: <a href="http://code.google.com/p/waterspout/">http://code.google.com/p/waterspout/</a></p>
-	<p><a href="/demos/locke/">Join Demo</a></p>
+	<p><img src="/images/waterspout.png" alt="WaterSpout" /></p>
+	<div id="description">
+		<div>
+			WaterSpout utilizes the new HTML 5 standard web sockets to provide a constant connection between the browser and the server. 
+			This allows for constant contact with the end user and a minimal amount of overhead. The reduced overhead as well as the specialized 
+			nature of the code running on the WaterSpout server make for extremely efficient communications between the user and the server. 
+		</div>
+	</div>
+	<p id="links">
+		<a href="/demos/locke/">Join Demo</a>
+		<span>-</span>
+		<a href="http://code.google.com/p/waterspout/">Source Code</a>
+		<span>-</span>
+		<a href="http://code.google.com/p/waterspout/wiki/GettingStarted">Getting Started</a>
+	</p>
 </body>
 </html>
