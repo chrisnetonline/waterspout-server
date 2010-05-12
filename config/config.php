@@ -45,12 +45,12 @@ $config['server']['XHPROF_ROOT'] = '/var/www/html';
 // The file containing blocked IP addresses. The file should return an array of IP
 // addresses. If a white list is defined, the black list will be ignored. Updating this
 // file requires a restart of the server.
-$config['server']['IP_BLACKLIST'] = _BASE . DIRECTORY_SEPARATOR . 'ipblacklist.php';
+$config['server']['IP_BLACKLIST'] = _CONFIG . DIRECTORY_SEPARATOR . 'ipblacklist.php';
 
 // The file containing white listed IP addresses. The file should return an array of IP
 // addresses. If this file returns anything, the black list will be ignored. Updating
 // this file, requires a restart of the server.
-// $config['server']['IP_WHITELIST'] = _BASE . DIRECTORY_SEPARATOR . 'ipwhitelist.php';
+// $config['server']['IP_WHITELIST'] = _CONFIG . DIRECTORY_SEPARATOR . 'ipwhitelist.php';
 
 /**
  * Dispatcher values.
@@ -112,7 +112,7 @@ $config['dispatcher']['MAGIC_PATH'] = '/usr/share/file/magic.mime';
 // Path to mime type mappings. This file should be a PHP file that returns an array as
 // the last thing it does. The array should be an associative array with the file
 // extension as the key and the mime type as the value.
-$config['dispatcher']['MIME'] = @include_once _BASE . DIRECTORY_SEPARATOR . 'mimetypes.php';
+$config['dispatcher']['MIME'] = @include_once _CONFIG . DIRECTORY_SEPARATOR . 'mimetypes.php';
 
 // This file must return the config array. Don't remove this line.
 return $config;
