@@ -190,14 +190,10 @@ abstract class Controller
 	{
 		$attempts = 0;
 
-		while ($attempts++ <= 10)
+		$chunk = '';
+		while ($tmp = @fread($socket, IOStream::MAX_BUFFER_SIZE))
 		{
-			$chunk = fread($socket, IOStream::MAX_BUFFER_SIZE);
-
-			if (!empty($chunk))
-			{
-				break;
-			}
+			$chunk.= $tmp;
 		}
 
 		if (empty($chunk) && empty($this->_background_content))

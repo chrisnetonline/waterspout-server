@@ -426,30 +426,28 @@ class IOStream
 	private function _handle_write()
 	{
 		$attempts = 0;
-
 		while (!empty($this->_write_buffer))
 		{
-			$chunk  = substr($this->_write_buffer, 0, 1024);
-			$length = strlen($chunk);
+			$num_bytes = @fwrite($this->_socket, $this->_write_buffer);
 
-			$num_bytes = @fwrite($this->_socket, $chunk, $length);
-
-			if (empty($num_bytes))
+			if ($num_bytes === FALSE)
 			{
-				++$attempts;
+				return;
 			}
-			else
+			elseif (empty($num_bytes))
 			{
-				$attempts = 0;
-			}
+				// After 10000 tries, we give up.
+				if ($attempts++ >= 10000)
+				{
+					break;
+				}
 
-			// After 10 tries, we give up.
-			if ($attempts >= 10)
-			{
-				break;
+				continue;
 			}
 
-			$leftover = substr($this->_write_buffer, $num_bytes, strlen($this->_write_buffer));
+			$attempts = 0;
+
+			$leftover = substr($this->_write_buffer, $num_bytes);
 
 			$this->_write_buffer = $leftover;
 		}
