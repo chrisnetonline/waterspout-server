@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -97,6 +97,14 @@ class HTTPConnection
 	 * @var    float
 	 */
 	private $_end;
+
+	/**
+ 	 * The number of requests made so far.
+	 *
+	 * @access private
+	 * @var    integer
+	 */
+	private $_request_count = 0;
 
 	/**
 	 * Constructor.
@@ -202,11 +210,67 @@ class HTTPConnection
 	 */
 	private function _finish_request()
 	{
+		// Don't close the connection if we are keeping the connection alive.
+		if (!$this->keep_alive())
+		{
+			$this->_stream->close();
+		}
+		else
+		{
+			// Prepare for the next request.
+			$this->_stream->read_until("\r\n\r\n", array($this, 'on_headers'));
+		}
+
 		// Clear out current request data.
 		$this->_request          = null;
 		$this->_request_finished = false;
+	}
 
-		$this->_stream->close();
+	/**
+	 * Checks to see if we should keep the connection open or if it should be closed.
+	 *
+	 * @access public
+	 * @return boolean
+	 */
+	public function keep_alive()
+	{
+		// Check to see if the connection header was set to close.
+		$connection = $this->_request->get_headers()->get('connection');
+		if (!empty($connection) && strtolower($connection) == 'close')
+		{
+			return false;
+		}
+
+		// Check to see if the number of requests per connection has been exceeded.
+		$max_requests = $this->_server->config('KEEPALIVE_MAX_REQUESTS');
+		if (!is_null($max_requests) && $this->_request_count >= $max_requests)
+		{
+			return false;
+		}
+
+		// Set up a timeout to close the connection after the keep alive timeout.
+		$this->_keep_alive_timeoutid = $this->_server->get_loop()->add_timeout(time() + $this->_server->config('KEEPALIVE_TIMEOUT'), array($this->_stream, 'close'));
+
+		return true;
+	}
+
+	/**
+	 * Returns the number of keep alive requests that may be made after this request.
+	 *
+	 * @access public
+	 * @return integer
+	 */
+	public function get_keepalives_left()
+	{
+		$max_requests = $this->_server->config('KEEPALIVE_MAX_REQUESTS');
+		if (!is_null($max_requests))
+		{
+			return $max_requests - $this->_request_count;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -251,6 +315,15 @@ class HTTPConnection
 		else
 		{
 			$this->_request = new HTTPRequest($this, $method, $uri, $version, $headers, $this->_address);
+		}
+
+		// Increment the request count.
+		++$this->_request_count;
+
+		// Stop the connection from being closed if this is a keep alive request.
+		if (!empty($this->_keep_alive_timeoutid))
+		{
+			$this->_server->get_loop()->remove_timeout($this->_keep_alive_timeoutid);
 		}
 
 		// Check for a request body.
@@ -330,6 +403,17 @@ class HTTPConnection
 	public function get_bytes_read()
 	{
 		return $this->_stream->get_bytes_read();
+	}
+
+	/**
+	 * Returns a server config value.
+	 *
+	 * @access public
+	 * @return mixed
+	 */
+	public function config($key)
+	{
+		return $this->_server->config($key);
 	}
 }
 
@@ -447,6 +531,17 @@ class MockConnection extends HTTPConnection
 	public function get_bytes_read()
 	{
 		return 0;
+	}
+
+	/**
+	 * Returns a server config value.
+	 *
+	 * @access public
+	 * @return null
+	 */
+	public function config($key)
+	{
+		return null;
 	}
 }
 ?>

@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -281,20 +281,23 @@ class IOLoop
 	{
 		require_once _LIBS . DIRECTORY_SEPARATOR . 'iolooptimeout.php';
 
-		$timeout = new IOLoop_Timeout($deadline, $callback);
-		$this->_timeouts[] = $timeout;
+		$timeout   = new IOLoop_Timeout($deadline, $callback);
+		$timeoutid = spl_object_hash($timeout);
+		$this->_timeouts[$timeoutid] = $timeout;
+
+		return $timeoutid;
 	}
 
 	/**
 	 * Removes a timeout from the loop.
 	 *
 	 * @access public
-	 * @param  Timeout $timeout
+	 * @param  string $timeoutid
 	 * @return void
 	 */
-	public function remove_timeout(Timeout $timeout)
+	public function remove_timeout($timeoutid)
 	{
-		unset($this->_timeouts[array_search($timeout, $this->_timeouts)]);
+		unset($this->_timeouts[$timeoutid]);
 	}
 }
 ?>

@@ -108,7 +108,6 @@ class HTTPResponse
 	{
 		$headers = array('Content-Length' => $this->_get_content_length(),
 		                 'Server'         => 'WaterSpout/0.6-alpha',
-		                 'Connection'     => 'close',
 		                 'Date'           => date('D, d M Y H:i:s \G\M\T')
 		                 );
 		$this->add_headers($headers);

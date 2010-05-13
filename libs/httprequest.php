@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -357,6 +357,19 @@ class HTTPRequest implements Serializable
 	public function write(HTTPResponse $chunk)
 	{
 		$chunk->set_default_headers();
+
+		// Check to see if we should close the connection or allow it to stay open.
+		$keepalive = $this->connection->keep_alive();
+		if ($keepalive)
+		{
+			$chunk->add_header('Connection', 'Keep-Alive');
+			$chunk->add_header('Keep-Alive', 'timeout=' . $this->connection->config('KEEPALIVE_TIMEOUT').', max=' . $this->connection->get_keepalives_left());
+		}
+		else
+		{
+			$chunk->add_header('Connection', 'close');
+		}
+
 		$this->connection->write((string) $chunk);
 
 		return true;

@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -160,6 +160,19 @@ class WSRequest extends HTTPRequest
 		$this->_previous_request_size = $this->connection->get_bytes_read();
 
 		return $size;
+	}
+
+	/**
+	 * Checks to see if we should keep the connection open or if it should be closed.
+	 *
+	 * Keep alive is always on for websockets.
+	 *
+	 * @access public
+	 * @return boolean
+	 */
+	public function keep_alive()
+	{
+		return true;
 	}
 }
 ?>
