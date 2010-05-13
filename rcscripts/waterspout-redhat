@@ -18,8 +18,8 @@
 RETVAL=0
 progdir="./"
 prog="server.php"
-host="localhost:7777"
-USER="ofwww"
+host="spoutserver.com"
+USER="root"
 
 start() {
         # Start daemons.

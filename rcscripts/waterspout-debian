@@ -12,7 +12,7 @@
 RETVAL=0
 progdir="./"
 prog="server.php"
-host="localhost:7777"
+host="spoutserver.com"
 USER="root"
 
 start() {
