@@ -228,13 +228,15 @@ class IOLoop
 				}
 				else
 				{
-					if (in_array($handler['socket'], $read))
-					{
-						call_user_func_array($handler['callback'], array_merge(array($handler['socket'], self::READ), $handler['args']));
-					}
+					// Write first.
 					if (in_array($handler['socket'], $write))
 					{
 						call_user_func_array($handler['callback'], array_merge(array($handler['socket'], self::WRITE), $handler['args']));
+					}
+					// Read second.
+					if (in_array($handler['socket'], $read))
+					{
+						call_user_func_array($handler['callback'], array_merge(array($handler['socket'], self::READ), $handler['args']));
 					}
 				}
 			}

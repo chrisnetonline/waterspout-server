@@ -364,7 +364,11 @@ class HTTPConnection
 		$this->_request->set_body($data);
 
 		call_user_func($this->_request_callback, $this->_request);
-		$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
+
+		if ($this->_request instanceof wsrequest)
+		{
+			$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
+		}
 	}
 
 	/**
