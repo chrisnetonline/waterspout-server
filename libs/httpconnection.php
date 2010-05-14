@@ -123,7 +123,10 @@ class HTTPConnection
 		$this->_address          = $address;
 		$this->_request_callback = $request_callback;
 
-		$this->_start = microtime(true);
+		if ($this->_server->config('VERBOSE') > 0)
+		{
+			$this->_start = microtime(true);
+		}
 
 		$this->_stream->read_until("\r\n\r\n", array($this, 'on_headers'));
 	}
@@ -185,7 +188,10 @@ class HTTPConnection
 			$this->_finish_request();
 		}
 
-		$this->_end = microtime(true);
+		if ($this->_server->config('VERBOSE') > 0)
+		{
+			$this->_end = microtime(true);
+		}
 	}
 
 	/**
@@ -215,10 +221,20 @@ class HTTPConnection
 		{
 			$this->_stream->close();
 		}
-		else
+		elseif (!$this->_stream->closed())
 		{
-			// Prepare for the next request.
-			$this->_stream->read_until("\r\n\r\n", array($this, 'on_headers'));
+			// Prepare for the next request if the connection is still open.
+			try
+			{
+				$this->_stream->read_until("\r\n\r\n", array($this, 'on_headers'));
+			}
+			catch (BadMethodCallException $bme)
+			{
+				if ($this->_server->config('VERBOSE') > 0)
+				{
+					file_put_contents($this->_server->config('LOG_FILE'), $bme->getMessage() . "\t" . $this->_start . "\r\n", FILE_APPEND);
+				}
+			}
 		}
 
 		// Clear out current request data.
@@ -236,7 +252,7 @@ class HTTPConnection
 	{
 		// Check to see if the connection header was set to close.
 		$connection = $this->_request->get_headers()->get('connection');
-		if (!empty($connection) && strtolower($connection) == 'close')
+		if (!empty($connection) && strtolower($connection) != 'keep-alive')
 		{
 			return false;
 		}
@@ -437,7 +453,6 @@ class MockConnection extends HTTPConnection
 	 */
 	public function __construct()
 	{
-		$this->_start = microtime(true);
 	}
 
 	/**

@@ -164,11 +164,11 @@ class IOLoop
 		$this->_running = true;
 		while (true)
 		{
-			$now = microtime(true);
-
 			// Run any timeouts that have been set.
 			if (count($this->_timeouts))
 			{
+				$now = microtime(true);
+
 				$timeouts = $this->_timeouts;
 				foreach ($timeouts as $key => $timeout)
 				{

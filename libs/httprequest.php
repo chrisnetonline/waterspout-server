@@ -363,7 +363,7 @@ class HTTPRequest implements Serializable
 		if ($keepalive)
 		{
 			$chunk->add_header('Connection', 'Keep-Alive');
-			$chunk->add_header('Keep-Alive', 'timeout=' . $this->connection->config('KEEPALIVE_TIMEOUT').', max=' . $this->connection->get_keepalives_left());
+			$chunk->add_header('Keep-Alive', 'timeout=' . $this->connection->config('KEEPALIVE_TIMEOUT') . ', max=' . $this->connection->get_keepalives_left());
 		}
 		else
 		{
@@ -402,18 +402,22 @@ class HTTPRequest implements Serializable
 	 * Returns the total processing time of the request.
 	 *
 	 * @access public
-	 * @return void
+	 * @return float
 	 */
 	public function request_time()
 	{
-		if (empty($this->finish_time))
+		if ($this->connection->config('VERBOSE') > 0)
 		{
-			return microtime(true) - $this->start_time;
+			if (empty($this->finish_time))
+			{
+				return microtime(true) - $this->start_time;
+			}
+			else
+			{
+				return $this->finish_time - $this->start_time;
+			}
 		}
-		else
-		{
-			return $this->finish_time - $this->start_time;
-		}
+		return 0;
 	}
 
 	/**
