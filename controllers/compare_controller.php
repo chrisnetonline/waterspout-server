@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -130,11 +130,11 @@ class Compare_Controller extends Controller
 	public function reset()
 	{
 		$ip = $this->request->get_remote_ip();
-	
+
 		self::$_ws_requests[$ip]       = 0;
 		self::$_ws_bytes_received[$ip] = 0;
 		self::$_ws_bytes_sent[$ip]     = 0;
-		
+
 		self::$_lp_requests[$ip]       = 0;
 		self::$_lp_bytes_received[$ip] = 0;
 		self::$_lp_bytes_sent[$ip]     = 0;
@@ -158,7 +158,7 @@ class Compare_Controller extends Controller
 
 		$this->write($response);
 	}
-	
+
 	/**
 	 * Handle websocket requests.
 	 *
@@ -280,7 +280,11 @@ class Compare_Controller extends Controller
 			{
 				self::$_ws_bytes_received[$ip] = 0;
 			}
-			
+			if (!isset(self::$_ws_bytes_sent[$ip]))
+			{
+				self::$_ws_bytes_sent[$ip] = 0;
+			}
+
 			++self::$_ws_requests[$ip];
 			self::$_ws_bytes_received[$ip]+= $this->request->get_request_size();
 		}
@@ -294,7 +298,11 @@ class Compare_Controller extends Controller
 			{
 				self::$_lp_bytes_received[$ip] = 0;
 			}
-			
+			if (!isset(self::$_lp_bytes_sent[$ip]))
+			{
+				self::$_lp_bytes_sent[$ip] = 0;
+			}
+
 			++self::$_lp_requests[$ip];
 			self::$_lp_bytes_received[$ip]+= $this->request->get_request_size();
 		}
@@ -308,7 +316,11 @@ class Compare_Controller extends Controller
 			{
 				self::$_sp_bytes_received[$ip] = 0;
 			}
-			
+			if (!isset(self::$_sp_bytes_sent[$ip]))
+			{
+				self::$_sp_bytes_sent[$ip] = 0;
+			}
+
 			++self::$_sp_requests[$ip];
 			self::$_sp_bytes_received[$ip]+= $this->request->get_request_size();
 		}
