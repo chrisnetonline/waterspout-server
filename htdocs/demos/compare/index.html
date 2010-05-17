@@ -25,7 +25,7 @@
 		<span class="bytes_received">Bytes Received</span> <small>(server-side)</small>
 	</div>
 
-	<div class="method">
+	<div class="method" id="ws_method">
 		<span id="ws_num_connections" class="num_connections">0</span><br />
 		<span id="ws_bytes_sent" class="bytes_sent">0</span><br />
 		<span id="ws_bytes_received" class="bytes_received">0</span><br />
@@ -59,14 +59,18 @@
 
 <br /><br />
 
-<small><strong><em>* 1 second timeout</em></strong></small>
+<small><strong><em>* 1 second interval</em></strong></small>
+
+<p><a href="/">&laquo; Back to home page</a></p>
 
 <script type="text/javascript">
 var comparisonRunning = false;
-var hostname = 'spoutserver.com';//window.location.host;
+var hostname = window.location.host;
 if (typeof window.WebSocket != 'undefined') {
 	var socketConn = new WebSocket('ws://' + hostname + '/compare/websocket');
 	socketConn.onmessage = handleWSResponse;
+} else {
+	jQuery('#ws_method').css('color', 'red');
 }
 
 function startCompare() {
@@ -85,6 +89,7 @@ function resetCompare() {
 	jQuery.ajax({
 		'url': 'http://' + hostname + '/compare/reset',
 		'type': 'POST',
+		'dataType': 'json',
 		'data': {}
 	});
 
@@ -102,7 +107,9 @@ function resetCompare() {
 }
 
 function requestWS() {
-	socketConn.send('');
+	if (typeof socketConn != 'undefined') {
+		socketConn.send('');
+	}
 }
 
 function requestLP() {

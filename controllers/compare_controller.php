@@ -30,81 +30,81 @@ class Compare_Controller extends Controller
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_ws_requests = 0;
+	static private $_ws_requests = array();
 
 	/**
 	 * The total number of long polling requests made.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_lp_requests = 0;
+	static private $_lp_requests = array();
 
 	/**
 	 * The total number of short polling requests made.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_sp_requests = 0;
+	static private $_sp_requests = array();
 
 	/**
 	 * The total number of bytes sent for WS.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_ws_bytes_sent = 0;
+	static private $_ws_bytes_sent = array();
 
 	/**
 	 * The total number of bytes sent for long polling.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_lp_bytes_sent = 0;
+	static private $_lp_bytes_sent = array();
 
 	/**
 	 * The total number of bytes sent for short polling.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_sp_bytes_sent = 0;
+	static private $_sp_bytes_sent = array();
 
 	/**
 	 * The total number of bytes received for WS.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_ws_bytes_received = 0;
+	static private $_ws_bytes_received = array();
 
 	/**
 	 * The total number of bytes received for long polling.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_lp_bytes_received = 0;
+	static private $_lp_bytes_received = array();
 
 	/**
 	 * The total number of bytes received for short polling.
 	 *
 	 * @static
 	 * @access private
-	 * @var    integer
+	 * @var    array
 	 */
-	static private $_sp_bytes_received = 0;
+	static private $_sp_bytes_received = array();
 
 	/**
 	 * Constructor.
@@ -129,17 +129,19 @@ class Compare_Controller extends Controller
 	 */
 	public function reset()
 	{
-		self::$_ws_requests = 0;
-		self::$_ws_bytes_received = 0;
-		self::$_ws_bytes_sent = 0;
+		$ip = $this->request->get_remote_ip();
+	
+		self::$_ws_requests[$ip]       = 0;
+		self::$_ws_bytes_received[$ip] = 0;
+		self::$_ws_bytes_sent[$ip]     = 0;
 		
-		self::$_lp_requests = 0;
-		self::$_lp_bytes_received = 0;
-		self::$_lp_bytes_sent = 0;
+		self::$_lp_requests[$ip]       = 0;
+		self::$_lp_bytes_received[$ip] = 0;
+		self::$_lp_bytes_sent[$ip]     = 0;
 
-		self::$_sp_requests = 0;
-		self::$_sp_bytes_received = 0;
-		self::$_sp_bytes_sent = 0;
+		self::$_sp_requests[$ip]       = 0;
+		self::$_sp_bytes_received[$ip] = 0;
+		self::$_sp_bytes_sent[$ip]     = 0;
 
 		$response = new HTTPResponse(200);
 
@@ -165,12 +167,14 @@ class Compare_Controller extends Controller
 	 */
 	public function websocket()
 	{
+		$ip = $this->request->get_remote_ip();
+
 		$response = new HTTPResponse(200);
 
 		// Determine if this is a JSONP request.
-		$body = array('ws_requests'       => self::$_ws_requests,
-					  'ws_bytes_received' => self::$_ws_bytes_received,
-					  'ws_bytes_sent'     => self::$_ws_bytes_sent
+		$body = array('ws_requests'       => self::$_ws_requests[$ip],
+					  'ws_bytes_received' => self::$_ws_bytes_received[$ip],
+					  'ws_bytes_sent'     => self::$_ws_bytes_sent[$ip]
 					  );
 		if ($this->request->get_request_var('callback'))
 		{
@@ -193,12 +197,14 @@ class Compare_Controller extends Controller
 	 */
 	public function long_polling()
 	{
+		$ip = $this->request->get_remote_ip();
+
 		$response = new HTTPResponse(200);
 
 		// Determine if this is a JSONP request.
-		$body = array('lp_requests'       => self::$_lp_requests,
-					  'lp_bytes_received' => self::$_lp_bytes_received,
-					  'lp_bytes_sent'     => self::$_lp_bytes_sent
+		$body = array('lp_requests'       => self::$_lp_requests[$ip],
+					  'lp_bytes_received' => self::$_lp_bytes_received[$ip],
+					  'lp_bytes_sent'     => self::$_lp_bytes_sent[$ip]
 					  );
 		if ($this->request->get_request_var('callback'))
 		{
@@ -221,12 +227,14 @@ class Compare_Controller extends Controller
 	 */
 	public function short_polling()
 	{
+		$ip = $this->request->get_remote_ip();
+
 		$response = new HTTPResponse(200);
 
 		// Determine if this is a JSONP request.
-		$body = array('sp_requests'       => self::$_sp_requests,
-					  'sp_bytes_received' => self::$_sp_bytes_received,
-					  'sp_bytes_sent'     => self::$_sp_bytes_sent
+		$body = array('sp_requests'       => self::$_sp_requests[$ip],
+					  'sp_bytes_received' => self::$_sp_bytes_received[$ip],
+					  'sp_bytes_sent'     => self::$_sp_bytes_sent[$ip]
 					  );
 		if ($this->request->get_request_var('callback'))
 		{
@@ -259,21 +267,50 @@ class Compare_Controller extends Controller
 	 */
 	private function _log_request()
 	{
+		$ip = $this->request->get_remote_ip();
+
 		// Keep track of the total connections and how much data they sent.
 		if ($this->request->get_controller_method() == 'websocket')
 		{
-			++self::$_ws_requests;
-			self::$_ws_bytes_received+= $this->request->get_request_size();
+			if (!isset(self::$_ws_requests[$ip]))
+			{
+				self::$_ws_requests[$ip] = 0;
+			}
+			if (!isset(self::$_ws_bytes_received[$ip]))
+			{
+				self::$_ws_bytes_received[$ip] = 0;
+			}
+			
+			++self::$_ws_requests[$ip];
+			self::$_ws_bytes_received[$ip]+= $this->request->get_request_size();
 		}
 		elseif ($this->request->get_controller_method() == 'long_polling')
 		{
-			++self::$_lp_requests;
-			self::$_lp_bytes_received+= $this->request->get_request_size();
+			if (!isset(self::$_lp_requests[$ip]))
+			{
+				self::$_lp_requests[$ip] = 0;
+			}
+			if (!isset(self::$_lp_bytes_received[$ip]))
+			{
+				self::$_lp_bytes_received[$ip] = 0;
+			}
+			
+			++self::$_lp_requests[$ip];
+			self::$_lp_bytes_received[$ip]+= $this->request->get_request_size();
 		}
 		elseif ($this->request->get_controller_method() == 'short_polling')
 		{
-			++self::$_sp_requests;
-			self::$_sp_bytes_received+= $this->request->get_request_size();
+			if (!isset(self::$_sp_requests[$ip]))
+			{
+				self::$_sp_requests[$ip] = 0;
+			}
+			if (!isset(self::$_sp_bytes_received[$ip]))
+			{
+				self::$_sp_bytes_received[$ip] = 0;
+			}
+			
+			++self::$_sp_requests[$ip];
+			self::$_sp_bytes_received[$ip]+= $this->request->get_request_size();
 		}
 	}
 
@@ -286,20 +323,34 @@ class Compare_Controller extends Controller
 	 */
 	private function _log_response(HTTPResponse $response)
 	{
+		$ip = $this->request->get_remote_ip();
+
 		$response->set_default_headers();
 
 		// Tally up the total bytes sent.
 		if ($this->request->get_controller_method() == 'websocket')
 		{
-			self::$_ws_bytes_sent+= strlen($response->get_body());
+			if (!isset(self::$_ws_bytes_sent[$ip]))
+			{
+				self::$_ws_bytes_sent[$ip] = 0;
+			}
+			self::$_ws_bytes_sent[$ip]+= strlen($response->get_body());
 		}
 		elseif ($this->request->get_controller_method() == 'long_polling')
 		{
-			self::$_lp_bytes_sent+= strlen($response);
+			if (!isset(self::$_lp_bytes_sent[$ip]))
+			{
+				self::$_lp_bytes_sent[$ip] = 0;
+			}
+			self::$_lp_bytes_sent[$ip]+= strlen($response);
 		}
 		elseif ($this->request->get_controller_method() == 'short_polling')
 		{
-			self::$_sp_bytes_sent+= strlen($response);
+			if (!isset(self::$_sp_bytes_sent[$ip]))
+			{
+				self::$_sp_bytes_sent[$ip] = 0;
+			}
+			self::$_sp_bytes_sent[$ip]+= strlen($response);
 		}
 	}
 }

@@ -226,7 +226,7 @@ class HTTPRequest implements Serializable
 		$this->set_uri($url);
 		$this->version    = $version;
 		$this->headers    = $headers;
-		$this->remote_ip  = $remote_ip;
+		$this->remote_ip  = reset(explode(':', $remote_ip));
 		$this->connection = $connection;
 		$this->start_time = time();
 
