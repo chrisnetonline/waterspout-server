@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<title>Comparison Demo</title>
+
+	<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+	<script type="text/javascript" src="js/jquery.json-2.2.min.js"></script>
+	
+	<style type="text/css">
+	body, input {font-family:Arial; font-size:14px; color:#333;}
+	.method {float:left; width:250px; text-align:center; font-weight:bold;}
+	.num_connections {font-size:26px;}
+	.bytes_sent, .bytes_received {font-size:16px;}
+	</style>
+</head>
+<body>
+
+<div>
+	<h1>Connection Method Comparison</h1>
+
+	<div class="method" style="text-align:left;">
+		<span class="num_connections">Requests</span><br />
+		<span class="bytes_sent">Bytes Sent</span> <small>(server-side)</small><br />
+		<span class="bytes_received">Bytes Received</span> <small>(server-side)</small>
+	</div>
+
+	<div class="method">
+		<span id="ws_num_connections" class="num_connections">0</span><br />
+		<span id="ws_bytes_sent" class="bytes_sent">0</span><br />
+		<span id="ws_bytes_received" class="bytes_received">0</span><br />
+		<em>WebSockets</em>
+	</div>
+
+	<div class="method">
+		<span id="lp_num_connections" class="num_connections">0</span><br />
+		<span id="lp_bytes_sent" class="bytes_sent">0</span><br />
+		<span id="lp_bytes_received" class="bytes_received">0</span><br />
+		<em>Long Polling</em>
+	</div>
+
+	<div class="method">
+		<span id="sp_num_connections" class="num_connections">0</span><br />
+		<span id="sp_bytes_sent" class="bytes_sent">0</span><br />
+		<span id="sp_bytes_received" class="bytes_received">0</span><br />
+		<em>Short Polling*</em>
+	</div>
+
+	<div style="clear:both;"></div>
+</div>
+
+<br /><br />
+
+<form action="/">
+	<input type="button" value="Start" onclick="javascript:startCompare();" />
+	<input type="button" value="Stop" onclick="javascript:stopCompare();" />
+	<input type="button" value="Reset" onclick="javascript:resetCompare();" />
+</form>
+
+<br /><br />
+
+<small><strong><em>* 1 second timeout</em></strong></small>
+
+<script type="text/javascript">
+var comparisonRunning = false;
+var hostname = 'spoutserver.com';//window.location.host;
+if (typeof window.WebSocket != 'undefined') {
+	var socketConn = new WebSocket('ws://' + hostname + '/compare/websocket');
+	socketConn.onmessage = handleWSResponse;
+}
+
+function startCompare() {
+	comparisonRunning = true;
+
+	requestLP();
+	requestSP();
+	requestWS();
+}
+
+function stopCompare() {
+	comparisonRunning = false;
+}
+
+function resetCompare() {
+	jQuery.ajax({
+		'url': 'http://' + hostname + '/compare/reset',
+		'type': 'POST',
+		'data': {}
+	});
+
+	jQuery('#ws_num_connections').html('0');
+	jQuery('#ws_bytes_sent').html('0');
+	jQuery('#ws_bytes_received').html('0');
+
+	jQuery('#lp_num_connections').html('0');
+	jQuery('#lp_bytes_sent').html('0');
+	jQuery('#lp_bytes_received').html('0');
+
+	jQuery('#sp_num_connections').html('0');
+	jQuery('#sp_bytes_sent').html('0');
+	jQuery('#sp_bytes_received').html('0');
+}
+
+function requestWS() {
+	socketConn.send('');
+}
+
+function requestLP() {
+	jQuery.ajax({
+		'url': 'http://' + hostname + '/compare/long_polling',
+		'type': 'POST',
+		'dataType': 'jsonp',
+		'jsonpCallback': 'handleLPResponse',
+		'data': {}
+	});
+}
+
+function requestSP() {
+	jQuery.ajax({
+		'url': 'http://' + hostname + '/compare/short_polling',
+		'type': 'POST',
+		'dataType': 'jsonp',
+		'jsonpCallback': 'handleSPResponse',
+		'data': {}
+	});
+}
+
+function handleWSResponse(response) {
+	response = jQuery.evalJSON(response.data);
+	
+	if (comparisonRunning && response.ws_requests) {
+		jQuery('#ws_num_connections').html(addCommas(response.ws_requests));
+		jQuery('#ws_bytes_sent').html(addCommas(response.ws_bytes_sent));
+		jQuery('#ws_bytes_received').html(addCommas(response.ws_bytes_received));
+
+		requestWS();
+	}
+}
+
+function handleLPResponse(response) {
+	if (comparisonRunning && response.lp_requests) {
+		jQuery('#lp_num_connections').html(addCommas(response.lp_requests));
+		jQuery('#lp_bytes_sent').html(addCommas(response.lp_bytes_sent));
+		jQuery('#lp_bytes_received').html(addCommas(response.lp_bytes_received));
+		
+		requestLP();
+	}
+}
+
+function handleSPResponse(response) {
+	if (comparisonRunning && response.sp_requests) {
+		jQuery('#sp_num_connections').html(addCommas(response.sp_requests));
+		jQuery('#sp_bytes_sent').html(addCommas(response.sp_bytes_sent));
+		jQuery('#sp_bytes_received').html(addCommas(response.sp_bytes_received));
+
+		setTimeout(requestSP, 1000);
+	}
+}
+
+function addCommas(nStr) {
+	nStr += '';
+	var x = nStr.split('.');
+	var x1 = x[0];
+	var x2 = x.length > 1 ? '.' + x[1] : '';
+	var rgx = /(\d+)(\d{3})/;
+	while (rgx.test(x1)) {
+		x1 = x1.replace(rgx, '$1' + ',' + '$2');
+	}
+	return x1 + x2;
+}
+</script>
+
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-326069-3']);
+_gaq.push(['_setDomainName', '.spoutserver.com']);
+_gaq.push(['_trackPageview']);
+
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+
+</body>
+</html>
