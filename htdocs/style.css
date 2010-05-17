@@ -12,6 +12,7 @@ img {border:0;}
 #links a {font-weight:bold;}
 #links span {padding:0 5px 0 5px;}
 #demos {margin:0 auto 15px auto; text-align:left; width:700px;}
-#demos h3 {margin:0; padding:0;}
-#demos ul {margin:0; padding:0; list-style-type:none;}
+#demos h3 {margin:0 0 10px 0; padding:0;}
+#demos h4 {margin:0 0 10px 0; padding:0;}
+#demos p {margin:0 0 20px 0; padding:0;}
 #footer {margin:20px auto; width:700px; font-weight:bold; font-size:10px;}
