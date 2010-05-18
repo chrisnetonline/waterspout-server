@@ -177,7 +177,8 @@ abstract class Controller
 
 		// Open a process to execute the content.
 		$descriptors = array(0 => array('pipe', 'r'),
-		                     1 => array('pipe', 'w')
+		                     1 => array('pipe', 'w'),
+		                     2 => array('pipe', 'r')
 		                     );
 
 		if ($config['VERBOSE'] >= 2)
