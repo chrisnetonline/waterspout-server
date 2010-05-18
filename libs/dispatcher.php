@@ -56,6 +56,14 @@ class Dispatcher
 	private $_httpserver;
 
 	/**
+	 * The available controllers.
+	 *
+	 * @access private
+	 * @var    array
+	 */
+	private $_controllers = array();
+
+	/**
 	 * Constructor. Sets the config values and the default timezone.
 	 *
 	 * @access public
@@ -68,6 +76,30 @@ class Dispatcher
 		date_default_timezone_set($config['DEFAULT_TIMEZONE']);
 
 		$this->_listeners = array();
+
+		// Build a list of controllers and methods.
+		$dir = dir(_LIBS . DIRECTORY_SEPARATOR . 'controllers');
+		while (($file = $dir->read()) !== false)
+		{
+			if (substr($file, -15) == '_controller.php')
+			{
+				require_once $dir->path . DIRECTORY_SEPARATOR .$file;
+				$controller_class = substr($file, 0, -4);
+				$this->_controllers[] = $controller_class;
+			}
+		}
+		$dir->close();
+		$dir = dir($this->_config['CONTROLLER_PATH']);
+		while (($file = $dir->read()) !== false)
+		{
+			if (substr($file, -15) == '_controller.php')
+			{
+				require_once $dir->path . DIRECTORY_SEPARATOR .$file;
+				$controller_class = substr($file, 0, -4);
+				$this->_controllers[] = $controller_class;
+			}
+		}
+		$dir->close();
 	}
 
 	/**
@@ -103,47 +135,21 @@ class Dispatcher
 		}
 
 		// Figure out which controller should be called.
-		if (!$request->get_controller_class())
-		{
-			// Default to the file controller.
-			$request->set_uri('/file/get' . $request->get_uri());
-			$controller_class = 'File_Controller';
-		}
-		else
-		{
-			// Build the class name from the request.
-			$controller_class = $request->get_controller_class() . '_Controller';
-		}
-
-		// If there is no controller specified, assume the request was for file content.
-		if (!class_exists($controller_class) &&
-		    !@file_exists($this->_config['CONTROLLER_PATH'] . strtolower($controller_class) . '.php') &&
-		    !@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'controllers/' . strtolower($controller_class) . '.php')
+		$controller_class = $request->get_controller_class();
+		if (empty($controller_class) ||
+		    !in_array(strtolower($controller_class), $this->_controllers)
 		    )
 		{
 			// Default to the file controller.
 			$request->set_uri('/file/get' . $request->get_uri());
 			$controller_class = 'File_Controller';
-
-			// Include the controller.
-			require_once _LIBS . DIRECTORY_SEPARATOR . 'controllers/file_controller.php';
-		}
-		else
-		{
-			// Include the controller.
-			if (@file_exists(_LIBS . DIRECTORY_SEPARATOR . 'controllers/' . strtolower($controller_class) . '.php'))
-			{
-				require_once _LIBS . DIRECTORY_SEPARATOR . 'controllers/' . strtolower($controller_class) . '.php';
-			}
-			else
-			{
-				require_once $this->_config['CONTROLLER_PATH'] . strtolower($controller_class) . '.php';
-			}
 		}
 
 		// Make sure the requested method exists.
 		$method = $request->get_controller_method();
-		if (empty($method) || !method_exists($controller_class, $method))
+		if (empty($method) ||
+		    !method_exists($controller_class, $method)
+		    )
 		{
 			// No good. Get this clown out of here.
 			$this->_four_o_four($request);
