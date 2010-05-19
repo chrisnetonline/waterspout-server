@@ -135,7 +135,7 @@ class Dispatcher
 		}
 
 		// Figure out which controller should be called.
-		$controller_class = $request->get_controller_class();
+		$controller_class = $request->get_controller_class() . '_controller';
 		if (empty($controller_class) ||
 		    !in_array(strtolower($controller_class), $this->_controllers)
 		    )
@@ -147,9 +147,7 @@ class Dispatcher
 
 		// Make sure the requested method exists.
 		$method = $request->get_controller_method();
-		if (empty($method) ||
-		    !method_exists($controller_class, $method)
-		    )
+		if (empty($method) || !method_exists($controller_class, $method))
 		{
 			// No good. Get this clown out of here.
 			$this->_four_o_four($request);
