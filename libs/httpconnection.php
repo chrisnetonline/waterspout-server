@@ -250,24 +250,34 @@ class HTTPConnection
 	 */
 	public function keep_alive()
 	{
-		// Check to see if the connection header was set to close.
-		$connection = $this->_request->get_headers()->get('connection');
-		if (!empty($connection) && strtolower($connection) != 'keep-alive')
+		// Make sure we have a HTTPRequest object.
+		if ($this->_request instanceof WSRequest)
 		{
-			return false;
+			return true;
 		}
-
-		// Check to see if the number of requests per connection has been exceeded.
-		$max_requests = $this->_server->config('KEEPALIVE_MAX_REQUESTS');
-		if (!is_null($max_requests) && $this->_request_count >= $max_requests)
+		elseif ($this->_request instanceof HTTPRequest)
 		{
-			return false;
+			// Check to see if the connection header was set to close.
+			$connection = $this->_request->get_headers()->get('connection');
+			if (!empty($connection) && strtolower($connection) != 'keep-alive')
+			{
+				return false;
+			}
+
+			// Check to see if the number of requests per connection has been exceeded.
+			$max_requests = $this->_server->config('KEEPALIVE_MAX_REQUESTS');
+			if (!is_null($max_requests) && $this->_request_count >= $max_requests)
+			{
+				return false;
+			}
+
+			// Set up a timeout to close the connection after the keep alive timeout.
+			$this->_keep_alive_timeoutid = $this->_server->get_loop()->add_timeout(time() + $this->_server->config('KEEPALIVE_TIMEOUT'), array($this->_stream, 'close'));
+
+			return true;
 		}
-
-		// Set up a timeout to close the connection after the keep alive timeout.
-		$this->_keep_alive_timeoutid = $this->_server->get_loop()->add_timeout(time() + $this->_server->config('KEEPALIVE_TIMEOUT'), array($this->_stream, 'close'));
-
-		return true;
+		
+		return false;
 	}
 
 	/**
@@ -356,7 +366,7 @@ class HTTPConnection
 			}
 			$this->_stream->read_bytes($content_length, array($this, 'on_request_body'));
 		}
-		elseif (!($this->_request instanceof wsrequest))
+		elseif (!($this->_request instanceof WSRequest))
 		{
 			call_user_func($this->_request_callback, $this->_request);
 		}
@@ -381,7 +391,7 @@ class HTTPConnection
 
 		call_user_func($this->_request_callback, $this->_request);
 
-		if ($this->_request instanceof wsrequest)
+		if ($this->_request instanceof WSRequest)
 		{
 			$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
 		}

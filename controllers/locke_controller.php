@@ -244,7 +244,7 @@ class Locke_Controller extends Controller
 
 		$this->dispatcher->add_listener($this);
 
-		if ($this->request instanceof wsrequest)
+		if ($this->request instanceof WSRequest)
 		{
 			++self::$_ws_requests;
 		}
@@ -354,7 +354,7 @@ class Locke_Controller extends Controller
 	private function _log_request()
 	{
 		// Keep track of the total connections and how much data they sent.
-		if ($this->request instanceof wsrequest)
+		if ($this->request instanceof WSRequest)
 		{
 			self::$_ws_bytes_received+= $this->request->get_request_size();
 		}
@@ -376,7 +376,7 @@ class Locke_Controller extends Controller
 	{
 		$response->set_default_headers();
 		// Tally up the total bytes sent.
-		if ($this->request instanceof wsrequest)
+		if ($this->request instanceof WSRequest)
 		{
 			self::$_ws_bytes_sent+= strlen($response->get_body());
 		}

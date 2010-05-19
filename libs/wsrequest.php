@@ -161,18 +161,5 @@ class WSRequest extends HTTPRequest
 
 		return $size;
 	}
-
-	/**
-	 * Checks to see if we should keep the connection open or if it should be closed.
-	 *
-	 * Keep alive is always on for websockets.
-	 *
-	 * @access public
-	 * @return boolean
-	 */
-	public function keep_alive()
-	{
-		return true;
-	}
 }
 ?>
