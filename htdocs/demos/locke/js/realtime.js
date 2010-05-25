@@ -93,7 +93,7 @@ realtimeComm.prototype.__listenWebSocket = function(uri) {
 	if (typeof window.WebSocket != 'undefined') {
 		_rt.socketConn = new WebSocket(_rt.urlSocket + uri);
 		_rt.socketConn.onmessage = function(response) {_rt.__onmessage(response, true);};
-		_rt.socketConn.onclose = _rt.__listenWebSocket;
+		_rt.socketConn.onclose = function() {_rt.__listenWebSocket(uri);};
 	}
 };
 
