@@ -420,44 +420,42 @@ function initGame() {
 	// Create realtime communication object.
 	realtime = new realtimeComm(window.location.host);
 
-	setTimeout(function() {
-		// Add obstacles.
-		new Obstacle('tree', [[4, 12], [5, 12], [6, 12]]);
-		new Obstacle('tree2', [[17, 7], [18, 7]]);
+	// Add obstacles.
+	new Obstacle('tree', [[4, 12], [5, 12], [6, 12]]);
+	new Obstacle('tree2', [[17, 7], [18, 7]]);
 
-		// Create yourself.
-		myPerson = new Person(jQuery.cookies.get('locke_uid'), jQuery.cookies.get('locke_name'), jQuery.cookies.get('locke_x'), jQuery.cookies.get('locke_y'));
-		myPerson.node.removeClass('person');
-		myPerson.node.addClass('self');
-		jQuery.cookies.set('locke_uid', myPerson.id);
+	// Create yourself.
+	myPerson = new Person(jQuery.cookies.get('locke_uid'), jQuery.cookies.get('locke_name'), jQuery.cookies.get('locke_x'), jQuery.cookies.get('locke_y'));
+	myPerson.node.removeClass('person');
+	myPerson.node.addClass('self');
+	jQuery.cookies.set('locke_uid', myPerson.id);
 
-		// Add listener for receiving updates from other users.
-		realtime.addListener('/locke/updates', function(response) {
-			if (response) {
-				for (var i = 0, size = response.commands.length; i < size; i++) {
-					if (response.commands[i].person != null && response.commands[i].person != myPerson.id) {
-						var person2;
-						if (!people[response.commands[i].person]) {
-							person2 = new Person(response.commands[i].person);
-						} else {
-							person2 = people[response.commands[i].person];
-						}
-						if (response.commands[i].coords) {
-							person2.walkTo(response.commands[i].coords);
-						} else if (response.commands[i].text) {
-							person2.setSpeech(response.commands[i].text);
-						}
+	// Add listener for receiving updates from other users.
+	realtime.addListener('/locke/updates', function(response) {
+		if (response) {
+			for (var i = 0, size = response.commands.length; i < size; i++) {
+				if (response.commands[i].person != null && response.commands[i].person != myPerson.id) {
+					var person2;
+					if (!people[response.commands[i].person]) {
+						person2 = new Person(response.commands[i].person);
+					} else {
+						person2 = people[response.commands[i].person];
+					}
+					if (response.commands[i].coords) {
+						person2.walkTo(response.commands[i].coords);
+					} else if (response.commands[i].text) {
+						person2.setSpeech(response.commands[i].text);
 					}
 				}
 			}
-		});
+		}
+	});
 
-		// Report your presence to other users.
+	// Report your presence to other users.
+	realtime.send('/locke/presence', {'person': myPerson.id, 'name': jQuery.cookies.get('locke_name'), 'coords': myPerson.gridPos}, presenceCallback);
+	setInterval(function() {
 		realtime.send('/locke/presence', {'person': myPerson.id, 'name': jQuery.cookies.get('locke_name'), 'coords': myPerson.gridPos}, presenceCallback);
-		setInterval(function() {
-			realtime.send('/locke/presence', {'person': myPerson.id, 'name': jQuery.cookies.get('locke_name'), 'coords': myPerson.gridPos}, presenceCallback);
-		}, 5000);
-	}, 1000);
+	}, 5000);
 
 	// Give the chat box focus.
 	jQuery('#message').focus();

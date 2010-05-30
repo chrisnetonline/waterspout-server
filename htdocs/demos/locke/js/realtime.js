@@ -6,6 +6,7 @@ if (!window.WebSocket) {
 }
 
 var _rt;
+var _rt_queue = [];
 
 var realtimeComm = function(handlerUrl) {
 	_rt = this;
@@ -14,7 +15,6 @@ var realtimeComm = function(handlerUrl) {
 	_rt.urlSocket  = 'ws://' + handlerUrl;
 	_rt.urlHttp    = parent.location.protocol + '//' + handlerUrl;
 	_rt.cursor     = get_cookie('waterspout_cursor') || '';
-	_rt.cookie     = get_cookie('waterspout_cookie') || '';
 	_rt.callbacks  = {};
 
 	if (typeof window.WebSocket != 'undefined') {
@@ -47,7 +47,11 @@ realtimeComm.prototype.send = function(uri, data, callback) {
 	data.__URI__ = uri;
 
 	if (typeof _rt.socketConn != 'undefined') {
-		_rt.socketConn.send(jQuery.toJSON(data));
+		if (_rt.socketConn.readyState != 1) {
+			_rt_queue.push(data);
+		} else {
+			_rt.socketConn.send(jQuery.toJSON(data));
+		}
 	} else {
 		jQuery.ajax({
 			'url': _rt.urlHttp + uri,
@@ -84,7 +88,7 @@ realtimeComm.prototype.__listenPolling = function(uri) {
 		'type': 'POST',
 		'dataType': 'jsonp',
 		'jsonpCallback': '_rt.JSONPlisten',
-		'data': {'waterspout_cursor': _rt.cursor, 'waterspout_cookie': _rt.cookie},
+		'data': {'waterspout_cursor': _rt.cursor},
 		'error': _rt.__handleError
 	});
 };
@@ -92,8 +96,23 @@ realtimeComm.prototype.__listenPolling = function(uri) {
 realtimeComm.prototype.__listenWebSocket = function(uri) {
 	if (typeof window.WebSocket != 'undefined') {
 		_rt.socketConn = new WebSocket(_rt.urlSocket + uri);
-		_rt.socketConn.onmessage = function(response) {_rt.__onmessage(response, true);};
-		_rt.socketConn.onclose = function() {_rt.__listenWebSocket(uri);};
+		_rt.socketConn.onmessage = function(response) {
+			// Process message received via websocket.
+			_rt.__onmessage(response, true);
+		};
+		_rt.socketConn.onclose = function() {
+			// Re-open the websocket connection.
+			_rt.__listenWebSocket(uri);
+		};
+		_rt.socketConn.onopen = function() {
+			// Process command queue.
+			for (var i = 0, size = _rt_queue.length; i < size; i++) {
+				_rt.socketConn.send(jQuery.toJSON(_rt_queue[i]));
+			}
+			
+			// Clear the command queue.
+			_rt_queue = [];
+		};
 	}
 };
 
