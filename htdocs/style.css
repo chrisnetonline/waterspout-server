@@ -6,12 +6,12 @@ img {border:0;}
 #logo div {padding:8px 0 0 80px;}
 #logo h1 {margin:0;}
 #logo p {margin:0; font-size:16px; text-transform:lowercase}
-#description {width:730px; text-align:left; margin:0 auto 20px auto; border:1px solid #CCC; background:#DDD url(/images/gradient.gif) repeat-x; -moz-border-radius:10px; -webkit-border-radius:10px; box-shadow:1px 1px 2px rgba(0, 0, 0, 0.5); -moz-box-shadow:1px 1px 2px rgba(0, 0, 0, 0.5); -webkit-box-shadow:1px 1px 2px rgba(0, 0, 0, 0.5);}
+#description {width:740px; text-align:left; margin:0 auto 20px auto; border:1px solid #CCC; background:#DDD url(/images/gradient.gif) repeat-x; -moz-border-radius:10px; -webkit-border-radius:10px; box-shadow:1px 1px 2px rgba(0, 0, 0, 0.5); -moz-box-shadow:1px 1px 2px rgba(0, 0, 0, 0.5); -webkit-box-shadow:1px 1px 2px rgba(0, 0, 0, 0.5);}
 #description div {padding:10px 15px 10px 15px; text-shadow:0 0.1em #FFF;}
 #links {margin:0 auto 15px auto; width:700px;}
 #links a {font-weight:bold;}
 #links span {padding:0 5px 0 5px;}
-#demos {margin:0 auto 15px auto; text-align:left; width:700px;}
+#demos {margin:0 auto 15px auto; text-align:left; width:710px;}
 #demos h3 {margin:0 0 10px 0; padding:0;}
 #demos h4 {margin:0 0 10px 0; padding:0;}
 #demos p {margin:0 0 20px 0; padding:0;}
