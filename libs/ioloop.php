@@ -158,9 +158,6 @@ class IOLoop
 	{
 		static $check = 0;
 
-		// Check to see if we can collect garbage.
-		$gc_collect = function_exists('gc_collect_cycles');
-
 		$this->_running = true;
 		while (true)
 		{
@@ -242,7 +239,7 @@ class IOLoop
 			}
 
 			// Clean up memory and stuff like that.
-			if ($gc_collect && mt_rand(1, 20) == 1)
+			if (mt_rand(1, 20) == 1)
 			{
 				gc_collect_cycles();
 			}

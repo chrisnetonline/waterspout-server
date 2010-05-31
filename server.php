@@ -37,6 +37,10 @@ define('_BASE', __DIR__);
 define('_CONFIG', __DIR__ . DIRECTORY_SEPARATOR . 'config');
 define('_LIBS', __DIR__ . DIRECTORY_SEPARATOR . 'libs');
 
+// Include compatibility fixes.
+require_once _LIBS . DIRECTORY_SEPARATOR . 'compat.php';
+
+// Load configuration file.
 $config = require _CONFIG . DIRECTORY_SEPARATOR . 'config.php';
 
 // Check for verbosity level from the command line.
