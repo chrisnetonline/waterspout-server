@@ -23,10 +23,17 @@
  * @link    http://www.spoutserver.com/
  */
 
+// Detects if the http pecl extension is installed.
+// The classes of this extension conflict with WaterSpout's.
+if (class_exists('HTTPRequest'))
+{
+	throw new Exception('You must first disable the \'http\' PHP extension before using WaterSpout.');
+}
+
 // If gc_collect_cycles() is not defined create a fake one.
 if (!function_exists('gc_collect_cycles'))
 {
 	function gc_collect_cycles() {}
 }
 
- ?>
+?>
