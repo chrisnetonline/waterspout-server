@@ -115,6 +115,12 @@ $config['dispatcher']['404_PATH'] = $config['dispatcher']['WEBROOT'] . DIRECTORY
 // To disable this feature, set the value to 0.
 $config['dispatcher']['CLEANUP_INTERVAL'] = 0;
 
+// The listener interval. Every X seconds the dispather will call notify_listeners() to
+// tell the listening connections to process their event queue or do some other periodic
+// work. The lower this value, the more often your queue processing will happen. If you
+// do not need to process a queue, set this value to something crazy high like 999999.
+$config['dispatcher']['LISTENER_INTERVAL'] = .002;
+
 // See $config['server']['TIMING'].
 $config['dispatcher']['TIMING'] = $config['server']['TIMING'];
 

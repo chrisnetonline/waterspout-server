@@ -115,7 +115,7 @@ class Dispatcher
 
 		// Now that we have a server, we have a reason to start our notify listeners
 		// timeouts. We will notify listeners every second.
-		$this->_httpserver->get_loop()->add_timeout(microtime(true) + .002, array($this, 'notify_listeners'));
+		$this->_httpserver->get_loop()->add_timeout(microtime(true) + $this->_config['LISTENER_INTERVAL'], array($this, 'notify_listeners'));
 	}
 
 	/**
@@ -271,7 +271,7 @@ class Dispatcher
 		}
 
 		// Put this call back in the loop.
-		$this->_httpserver->get_loop()->add_timeout(microtime(true) + .002, array($this, 'notify_listeners'));
+		$this->_httpserver->get_loop()->add_timeout(microtime(true) + $this->_config['LISTENER_INTERVAL'], array($this, 'notify_listeners'));
 	}
 
 	/**
