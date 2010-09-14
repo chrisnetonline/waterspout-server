@@ -68,29 +68,114 @@ class WSRequest extends HTTPRequest
 	 * Sends back handshake headers.
 	 *
 	 * @access public
+	 * @param  string $code
 	 * @return void
 	 */
-	public function handshake()
+	public function handshake($code)
 	{
 		$handshake = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
 		$handshake.= "Upgrade: WebSocket\r\n";
 		$handshake.= "Connection: Upgrade\r\n";
-		$handshake.= 'WebSocket-Origin: ' . $this->headers->get('Origin') . "\r\n";
-
-		if (!empty($this->query))
+		
+		// WebSocket handshake v76.
+		if ($this->headers->has('Sec-WebSocket-Key1') && $this->headers->has('Sec-WebSocket-Key2'))
 		{
-			$handshake.= 'WebSocket-Location: ' . $this->full_url() . '?' . $this->query . "\r\n";
+			$handshake.= 'Sec-WebSocket-Origin: ' . $this->headers->get('Origin') . "\r\n";
+
+			if (!empty($this->query))
+			{
+				$handshake.= 'Sec-WebSocket-Location: ' . $this->full_url() . '?' . $this->query . "\r\n";
+			}
+			else
+			{
+				$handshake.= 'Sec-WebSocket-Location: ' . $this->full_url() . "\r\n";
+			}
+
+			if ($this->headers->has('Sec-WebSocket-Protocol'))
+			{
+				$handshake.= 'Sec-WebSocket-Protocol: ' . $this->headers->get('Sec-WebSocket-Protocol') . "\r\n";
+			}
+			
+			$handshake.= "\r\n";
+			
+			$key1 = $this->headers->get('Sec-WebSocket-Key1');
+			$key2 = $this->headers->get('Sec-WebSocket-Key2');
+			$handshake.= $this->_create_sec_handshake($key1, $key2, $code);
 		}
+		// WebSocket handshake v75.
 		else
 		{
-			$handshake.= 'WebSocket-Location: ' . $this->full_url() . "\r\n";
-		}
+			$handshake.= 'WebSocket-Origin: ' . $this->headers->get('Origin') . "\r\n";
 
-		$handshake.= "\r\n";
+			if (!empty($this->query))
+			{
+				$handshake.= 'WebSocket-Location: ' . $this->full_url() . '?' . $this->query . "\r\n";
+			}
+			else
+			{
+				$handshake.= 'WebSocket-Location: ' . $this->full_url() . "\r\n";
+			}
+
+			$handshake.= "\r\n";
+		}
 
 		return $handshake;
 	}
 
+	/**
+	 * Obtain int 32.
+	 *
+	 * @access public
+	 * @param  string $key
+	 * @return string
+	 */
+	private function _obtain_int32($key)
+	{
+		$n_spaces = 0;
+		$len = mb_strlen($key, '8bit');
+		$int = '';
+
+		for ($i = 0; $i < $len; $i++)
+		{
+			$char = $key[$i];
+			if (is_numeric($char))
+			{
+				$int.= $char;
+			}
+			if ($char == ' ')
+			{
+				$n_spaces++;
+			}
+		}
+		
+		$return = ($int * 1) / $n_spaces;
+
+		return $return;
+	}
+
+	/**
+	 * Creates the secure handshake.
+	 *
+	 * @access public
+	 * @param  string $key1
+	 * @param  string $key2
+	 * @param  string $code
+	 * @return string
+	 */
+	private function _create_sec_handshake($key1, $key2, $code)
+	{
+		$i1 = $this->_obtain_int32($key1);
+		$i2 = $this->_obtain_int32($key2);
+		
+		$return = md5(
+			pack('N', $i1) .
+			pack('N', $i2) .
+			$code,
+			true
+		);
+		return $return;
+	}
+	
 	/**
 	 * Sets the body content after trimming the delimiter.
 	 *
@@ -102,6 +187,18 @@ class WSRequest extends HTTPRequest
 	{
 		$this->body = mb_substr($body, 1, -1);
 		$this->parse_body();
+	}
+
+	/**
+	 * Sets the body content without altering it.
+	 *
+	 * @access public
+	 * @param  string $body
+	 * @return void
+	 */
+	public function set_body_unparsed($body)
+	{
+		$this->body = $body;
 	}
 
 	/**

@@ -300,6 +300,26 @@ class HTTPConnection
 	}
 
 	/**
+	 * Callback called when the third key for the handshake has been read from the stream.
+	 *
+	 * @access public
+	 * @param  string $data
+	 * @return void
+	 */
+	public function on_finish_handshake_v76($data)
+	{
+		if ($this->_server->config('VERBOSE') >= 2)
+		{
+			file_put_contents($this->_server->config('LOG_FILE'), "REQUEST BODY (HANDSHAKE)\t" . $this->_start . ":\r\n\r\n" . $data . "\r\n", FILE_APPEND);
+		}
+
+		$this->write($this->_request->handshake($data));
+
+		call_user_func($this->_request_callback, $this->_request);
+		$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
+	}
+	
+	/**
 	 * Callback called when new headers are found on the stream.
 	 *
 	 * @access public
@@ -332,10 +352,17 @@ class HTTPConnection
 		{
 			$this->_request = new WSRequest($this, $method, $uri, $version, $headers, $this->_address);
 
-			$this->write($this->_request->handshake());
-
-			call_user_func($this->_request_callback, $this->_request);
-			$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
+			if ($headers->has('Sec-WebSocket-Key1') && $headers->has('Sec-WebSocket-Key2'))
+			{
+				$this->_stream->read_bytes(8, array($this, 'on_finish_handshake_v76'));
+			}
+			else
+			{
+				$this->write($this->_request->handshake());
+	
+				call_user_func($this->_request_callback, $this->_request);
+				$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
+			}
 		}
 		// This must be a regular HTTP request.
 		else
@@ -525,6 +552,17 @@ class MockConnection extends HTTPConnection
 	 * @return void
 	 */
 	public function on_request_body($data)
+	{
+	}
+
+	/**
+	 * Callback called when the third key for the handshake has been read from the stream.
+	 *
+	 * @access public
+	 * @param  string $data
+	 * @return void
+	 */
+	public function on_finish_handshake_v76($data)
 	{
 	}
 

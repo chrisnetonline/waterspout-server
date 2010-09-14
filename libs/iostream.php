@@ -218,7 +218,7 @@ class IOStream
 			throw new RuntimeException('Read callback is not callable.');
 		}
 
-		if (mb_strlen($this->_read_buffer, 'UTF-8') >= $num_bytes)
+		if (mb_strlen($this->_read_buffer, '8bit') >= $num_bytes)
 		{
 			call_user_func($callback, $this->_consume($num_bytes));
 			return;
@@ -410,7 +410,7 @@ class IOStream
 
 		$this->_read_buffer.= $chunk;
 
-		if (mb_strlen($this->_read_buffer, 'UTF-8') >= self::MAX_BUFFER_SIZE)
+		if (mb_strlen($this->_read_buffer, '8bit') >= self::MAX_BUFFER_SIZE)
 		{
 			$this->close();
 			return;
@@ -418,7 +418,7 @@ class IOStream
 
 		if ($this->_read_bytes)
 		{
-			if (mb_strlen($this->_read_buffer, 'UTF-8') >= $this->_read_bytes)
+			if (mb_strlen($this->_read_buffer, '8bit') >= $this->_read_bytes)
 			{
 				$num_bytes            = $this->_read_bytes;
 				$callback             = $this->_read_callback;
@@ -493,8 +493,8 @@ class IOStream
 	 */
 	private function _consume($loc)
 	{
-		$result = mb_substr($this->_read_buffer, 0, $loc, 'UTF-8');
-		$this->_read_buffer = mb_substr($this->_read_buffer, $loc, mb_strlen($this->_read_buffer, 'UTF-8'), 'UTF-8');
+		$result = mb_substr($this->_read_buffer, 0, $loc, '8bit');
+		$this->_read_buffer = mb_substr($this->_read_buffer, $loc, mb_strlen($this->_read_buffer, '8bit'), '8bit');
 		return $result;
 	}
 
