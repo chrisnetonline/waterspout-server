@@ -15,6 +15,6 @@ This "Getting Started" guide will walk you through the steps necessary to run th
 
 3 Simple Steps
 --------------
-# Check out the source from GitHub: https://github.com/chrisnetonline/WaterSpout-Server
-# From the top level of the check out run via the command line: `php server.php`
-# Goto: `http://localhost:7777/demos/locke`
+1. Check out the source from GitHub: https://github.com/chrisnetonline/WaterSpout-Server
+2. From the top level of the check out run via the command line: `php server.php`
+3. Goto: `http://localhost:7777/demos/locke`
