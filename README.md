@@ -4,9 +4,9 @@ Prerequisites
 =============
 * PHP 5.2.1 or above (PHP 5.3.x is recommended)
 * The following extensions must be enabled:
-** mbstring
-** sockets
-** openssl (required only if you want to enable ssl)
+> mbstring
+> sockets
+> openssl (required only if you want to enable ssl)
 
 Overview
 ========
