@@ -78,7 +78,7 @@ class IOLoop
 	 * Creates a singleton instance (if needed) and returns it.
 	 *
 	 * @access public
-	 * @return void
+	 * @return IOLoop
 	 */
 	public static function singleton()
 	{
@@ -93,6 +93,7 @@ class IOLoop
 	/**
 	 * Adds a new event handler to the loop.
 	 *
+	 * @throws RuntimeException
 	 * @access public
 	 * @param  resource $socket
 	 * @param  callback $callback
@@ -151,13 +152,12 @@ class IOLoop
 	/**
 	 * Runs the loop.
 	 *
+	 * @throws RuntimeException
 	 * @access public
 	 * @return void
 	 */
 	public function start()
 	{
-		static $check = 0;
-
 		$this->_running = true;
 		while (true)
 		{
@@ -274,7 +274,7 @@ class IOLoop
 	 * @access public
 	 * @param  float    $deadline
 	 * @param  callback $callback
-	 * @return void
+	 * @return string
 	 */
 	public function add_timeout($deadline, $callback)
 	{
@@ -299,4 +299,3 @@ class IOLoop
 		unset($this->_timeouts[$timeoutid]);
 	}
 }
-?>

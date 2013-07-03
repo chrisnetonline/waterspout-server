@@ -35,5 +35,3 @@ if (!function_exists('gc_collect_cycles'))
 {
 	function gc_collect_cycles() {}
 }
-
-?>

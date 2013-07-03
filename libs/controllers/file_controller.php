@@ -273,6 +273,7 @@ class File_Controller extends Controller
 	 * Processes the given event.
 	 *
 	 * @access public
+	 * @param  Controller $controller
 	 * @return void
 	 */
 	public function process_event(Controller $controller = null)
@@ -280,4 +281,3 @@ class File_Controller extends Controller
 		return;
 	}
 }
-?>

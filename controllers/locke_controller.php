@@ -123,7 +123,8 @@ class Locke_Controller extends Controller
 	 * Constructor.
 	 *
 	 * @access public
-	 * @return void
+	 * @param  HTTPRequest $request
+	 * @param  Dispatcher $dispatcher
 	 */
 	public function __construct(HTTPRequest $request, Dispatcher $dispatcher)
 	{
@@ -294,6 +295,7 @@ class Locke_Controller extends Controller
 	 * Processes the given event.
 	 *
 	 * @access public
+	 * @param  Controller $mover
 	 * @return void
 	 */
 	public function process_event(Controller $mover = null)
@@ -375,6 +377,7 @@ class Locke_Controller extends Controller
 	private function _log_response(HTTPResponse $response)
 	{
 		$response->set_default_headers();
+
 		// Tally up the total bytes sent.
 		if ($this->request instanceof WSRequest)
 		{
@@ -390,11 +393,11 @@ class Locke_Controller extends Controller
 	 * Filters out dead Lockes.
 	 *
 	 * @access public
-	 * @return void
+	 * @param  array $item
+	 * @return boolean
 	 */
 	public function _presence_filter($item)
 	{
 		return $item['timestamp'] >= $this->_presence_deadline;
 	}
 }
-?>

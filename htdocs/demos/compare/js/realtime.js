@@ -17,6 +17,7 @@ var realtimeComm = function(handlerUrl) {
 	_rt.cookie     = get_cookie('waterspout_cookie') || '';
 	_rt.callbacks  = {};
 
+	console.log(_rt.urlSocket);
 	if (typeof window.WebSocket != 'undefined') {
 		_rt.__listenWebSocket('/core/handshake');
 	}

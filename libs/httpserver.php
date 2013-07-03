@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -98,7 +98,6 @@ class HTTPServer
 	 * @param  mixed  $request_callback
 	 * @param  IOLoop $io_loop
 	 * @param  array  $config
-	 * @return void
 	 */
 	public function __construct($request_callback, IOLoop $io_loop, array $config)
 	{
@@ -136,6 +135,7 @@ class HTTPServer
 	/**
 	 * Sets up the socket and listens for new requests.
 	 *
+	 * @throws RuntimeException
 	 * @access public
 	 * @return void
 	 */
@@ -262,6 +262,7 @@ class HTTPServer
 	 * Returns a config value.
 	 *
 	 * @access public
+	 * @param  string $key
 	 * @return mixed
 	 */
 	public function config($key)
@@ -381,4 +382,3 @@ class HTTPServer
 		return false;
 	}
 }
-?>

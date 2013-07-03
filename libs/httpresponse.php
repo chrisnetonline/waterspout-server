@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -86,7 +86,6 @@ class HTTPResponse
 	 *
 	 * @access public
 	 * @param  integer $status
-	 * @return void
 	 */
 	public function __construct($status)
 	{
@@ -281,4 +280,3 @@ class HTTPResponse
 		return $this->headers_as_string() . $this->body;
 	}
 }
-?>

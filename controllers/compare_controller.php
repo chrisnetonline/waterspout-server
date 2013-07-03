@@ -110,7 +110,8 @@ class Compare_Controller extends Controller
 	 * Constructor.
 	 *
 	 * @access public
-	 * @return void
+	 * @param  HTTPRequest $request
+	 * @param  Dispatcher $dispatcher
 	 */
 	public function __construct(HTTPRequest $request, Dispatcher $dispatcher)
 	{
@@ -253,6 +254,7 @@ class Compare_Controller extends Controller
 	 * Processes the given event.
 	 *
 	 * @access public
+	 * @param  Controller $controller
 	 * @return void
 	 */
 	public function process_event(Controller $controller = null)
@@ -366,4 +368,3 @@ class Compare_Controller extends Controller
 		}
 	}
 }
-?>

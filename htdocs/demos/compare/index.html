@@ -6,7 +6,7 @@
 
 	<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
 	<script type="text/javascript" src="js/jquery.json-2.2.min.js"></script>
-	
+
 	<style type="text/css">
 	body, input {font-family:Arial; font-size:14px; color:#333;}
 	.method {float:left; width:250px; text-align:center; font-weight:bold;}
@@ -134,7 +134,7 @@ function requestSP() {
 
 function handleWSResponse(response) {
 	response = jQuery.evalJSON(response.data);
-	
+
 	if (comparisonRunning && response.ws_requests) {
 		jQuery('#ws_num_connections').html(addCommas(response.ws_requests));
 		jQuery('#ws_bytes_sent').html(addCommas(response.ws_bytes_sent));
@@ -149,7 +149,7 @@ function handleLPResponse(response) {
 		jQuery('#lp_num_connections').html(addCommas(response.lp_requests));
 		jQuery('#lp_bytes_sent').html(addCommas(response.lp_bytes_sent));
 		jQuery('#lp_bytes_received').html(addCommas(response.lp_bytes_received));
-		
+
 		requestLP();
 	}
 }

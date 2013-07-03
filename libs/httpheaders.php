@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -68,7 +68,7 @@ class HTTPHeaders extends ArrayObject
 	 *
 	 * @access public
 	 * @param  string $offset
-	 * @return void
+	 * @return mixed
 	 */
 	public function offsetGet($offset)
 	{
@@ -90,7 +90,7 @@ class HTTPHeaders extends ArrayObject
 	 */
 	public function offsetSet($offset, $value)
 	{
-		return parent::offsetSet(self::_normalize_name($offset), $value);
+		parent::offsetSet(self::_normalize_name($offset), $value);
 	}
 
 	/**
@@ -102,7 +102,7 @@ class HTTPHeaders extends ArrayObject
 	 */
 	public function offsetUnset($offset)
 	{
-		return parent::offsetUnset(self::_normalize_name($offset));
+		parent::offsetUnset(self::_normalize_name($offset));
 	}
 
 	/**
@@ -110,7 +110,7 @@ class HTTPHeaders extends ArrayObject
 	 *
 	 * @access public
 	 * @param  string $name
-	 * @return void
+	 * @return string
 	 */
 	public function __get($name)
 	{
@@ -135,7 +135,7 @@ class HTTPHeaders extends ArrayObject
 	 *
 	 * @access public
 	 * @param  string $name
-	 * @return void
+	 * @return boolean
 	 */
 	public function has($name)
 	{
@@ -147,7 +147,7 @@ class HTTPHeaders extends ArrayObject
 	 *
 	 * @access public
 	 * @param  string $name
-	 * @return void
+	 * @return string
 	 */
 	public function get($name)
 	{
@@ -159,7 +159,7 @@ class HTTPHeaders extends ArrayObject
 	 *
 	 * @access public
 	 * @param  string $headers_string
-	 * @return void
+	 * @return HTTPHeaders
 	 */
 	public static function parse($headers_string)
 	{
@@ -179,4 +179,3 @@ class HTTPHeaders extends ArrayObject
 		return $headers;
 	}
 }
-?>

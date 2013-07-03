@@ -107,6 +107,14 @@ class HTTPConnection
 	private $_request_count = 0;
 
 	/**
+	 * The timeout hash for keep alive.
+	 *
+	 * @access private
+	 * @var    string
+	 */
+	private $_keep_alive_timeoutid;
+
+	/**
 	 * Constructor.
 	 *
 	 * @access public
@@ -114,7 +122,6 @@ class HTTPConnection
 	 * @param  IOStream   $stream
 	 * @param  string     $address
 	 * @param  mixed      $request_callback
-	 * @return void
 	 */
 	public function __construct(HTTPServer $server, IOStream $stream, $address, $request_callback)
 	{
@@ -147,6 +154,7 @@ class HTTPConnection
 	/**
 	 * Writes data to the stream.
 	 *
+	 * @throws BadMethodCallException
 	 * @access public
 	 * @param  string  $chunk
 	 * @return void
@@ -276,7 +284,7 @@ class HTTPConnection
 
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -318,10 +326,11 @@ class HTTPConnection
 		call_user_func($this->_request_callback, $this->_request);
 		$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
 	}
-	
+
 	/**
 	 * Callback called when new headers are found on the stream.
 	 *
+	 * @throws OverflowException
 	 * @access public
 	 * @param  string $data
 	 * @return void
@@ -359,7 +368,7 @@ class HTTPConnection
 			else
 			{
 				$this->write($this->_request->handshake());
-	
+
 				call_user_func($this->_request_callback, $this->_request);
 				$this->_stream->read_until(chr(255), array($this, 'on_request_body'));
 			}
@@ -428,7 +437,7 @@ class HTTPConnection
 	 * Figure out how long the whole thing took.
 	 *
 	 * @access public
-	 * @return void
+	 * @return mixed
 	 */
 	public function processing_time()
 	{
@@ -466,6 +475,7 @@ class HTTPConnection
 	 * Returns a server config value.
 	 *
 	 * @access public
+	 * @param  string $key
 	 * @return mixed
 	 */
 	public function config($key)
@@ -486,7 +496,6 @@ class MockConnection extends HTTPConnection
 	 * Constructor.
 	 *
 	 * @access public
-	 * @return void
 	 */
 	public function __construct()
 	{
@@ -570,7 +579,7 @@ class MockConnection extends HTTPConnection
 	 * Figure out how long the whole thing took.
 	 *
 	 * @access public
-	 * @return void
+	 * @return integer
 	 */
 	public function processing_time()
 	{
@@ -585,9 +594,8 @@ class MockConnection extends HTTPConnection
 	 */
 	public function get_identifier()
 	{
-		return $this->_start;
+		return null;
 	}
-
 
 	/**
 	 * Returns the total number of bytes read by the stream.
@@ -604,6 +612,7 @@ class MockConnection extends HTTPConnection
 	 * Returns a server config value.
 	 *
 	 * @access public
+	 * @param  string $key
 	 * @return null
 	 */
 	public function config($key)
@@ -611,4 +620,3 @@ class MockConnection extends HTTPConnection
 		return null;
 	}
 }
-?>

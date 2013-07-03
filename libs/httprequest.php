@@ -24,6 +24,7 @@
  */
 
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httpconnection.php';
+
 /**
  * A request made over HTTP.
  *
@@ -196,16 +197,12 @@ class HTTPRequest implements Serializable
 	 * Constructor.
 	 *
 	 * @access public
-	 * @param  HTTPConnect $connection
-	 * @apram  string      $method
-	 * @param  string      $uri
-	 * @param  string      $version
-	 * @param  HTTPHeaders $headers
-	 * @param  string      $remote_ip
-	 * @param  string      $protocol
-	 * @param  string      $host
-	 * @param  array       $files
-	 * @return void
+	 * @param  HTTPConnection $connection
+	 * @apram  string         $method
+	 * @param  string         $uri
+	 * @param  string         $version
+	 * @param  array          $headers
+	 * @param  string         $remote_ip
 	 */
 	public function __construct(HTTPConnection $connection, $method, $uri,
 	                            $version = 'HTTP/1.0', $headers = null,
@@ -391,7 +388,7 @@ class HTTPRequest implements Serializable
 	 * Returns the full URL of the request.
 	 *
 	 * @access public
-	 * @return void
+	 * @return string
 	 */
 	public function full_url()
 	{
@@ -736,4 +733,3 @@ class HTTPRequest implements Serializable
 		return $this->connection->get_bytes_read();
 	}
 }
-?>

@@ -1,17 +1,17 @@
 <?php
 /**
  * This file is part of WaterSpout.
- * 
+ *
  * WaterSpout is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * WaterSpout is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with WaterSpout.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -134,7 +134,6 @@ class IOStream
 	 * @access public
 	 * @param  resource $socket
 	 * @param  IOLoop   $io_loop
-	 * @return void
 	 */
 	public function __construct($socket, IOLoop $io_loop)
 	{
@@ -168,6 +167,7 @@ class IOStream
 	/**
 	 * Read until the specified set of characters is found.
 	 *
+	 * @throws RuntimeException
 	 * @access public
 	 * @param  string   $delimiter
 	 * @param  callback $callback
@@ -202,6 +202,7 @@ class IOStream
 	/**
 	 * Read the specified number of bytes.
 	 *
+	 * @throws RuntimeException
 	 * @access public
 	 * @param  integer  $num_bytes
 	 * @param  callback $callback
@@ -233,6 +234,7 @@ class IOStream
 	/**
 	 * Writes the given data to the stream.
 	 *
+	 * @throws RuntimeException
 	 * @access public
 	 * @param  string   $data
 	 * @param  callback $callback
@@ -254,6 +256,7 @@ class IOStream
 	/**
 	 * Sets the callback to be called when the connection is closed.
 	 *
+	 * @throws RuntimeException
 	 * @access public
 	 * @param  callback $callback
 	 * @return void
@@ -326,7 +329,8 @@ class IOStream
 	 * Calls the event handler for whatever events have occured.
 	 *
 	 * @access public
-	 * @param  integer $events
+	 * @param  resource $socket
+	 * @param  integer  $events
 	 * @return void
 	 */
 	public function handle_events($socket, $events)
@@ -517,6 +521,7 @@ class IOStream
 	 * Adds a state to watch for to the stream.
 	 *
 	 * @access private
+	 * @param  integer $state
 	 * @return void
 	 */
 	private function _add_io_state($state)
@@ -539,4 +544,3 @@ class IOStream
 		return $this->_bytes_read;
 	}
 }
-?>

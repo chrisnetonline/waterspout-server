@@ -69,16 +69,16 @@ class WSRequest extends HTTPRequest
 	 *
 	 * @access public
 	 * @param  string $code
-	 * @return void
+	 * @return string
 	 */
-	public function handshake($code)
+	public function handshake($code = null)
 	{
 		$handshake = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
 		$handshake.= "Upgrade: WebSocket\r\n";
 		$handshake.= "Connection: Upgrade\r\n";
-		
-		// WebSocket handshake v76.
-		if ($this->headers->has('Sec-WebSocket-Key1') && $this->headers->has('Sec-WebSocket-Key2'))
+
+		// WebSocket handshake v8.
+		if ($this->headers->has('Sec-WebSocket-Key'))
 		{
 			$handshake.= 'Sec-WebSocket-Origin: ' . $this->headers->get('Origin') . "\r\n";
 
@@ -95,9 +95,34 @@ class WSRequest extends HTTPRequest
 			{
 				$handshake.= 'Sec-WebSocket-Protocol: ' . $this->headers->get('Sec-WebSocket-Protocol') . "\r\n";
 			}
-			
+
+			$key = $this->headers->get('Sec-WebSocket-Key');
+			$guid = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+			$handshake.= 'Sec-WebSocket-Accept: ' . base64_encode(sha1($key . $guid, true)) . "\r\n";
+
 			$handshake.= "\r\n";
-			
+		}
+		// WebSocket handshake v76.
+		elseif ($this->headers->has('Sec-WebSocket-Key1') && $this->headers->has('Sec-WebSocket-Key2'))
+		{
+			$handshake.= 'Sec-WebSocket-Origin: ' . $this->headers->get('Origin') . "\r\n";
+
+			if (!empty($this->query))
+			{
+				$handshake.= 'Sec-WebSocket-Location: ' . $this->full_url() . '?' . $this->query . "\r\n";
+			}
+			else
+			{
+				$handshake.= 'Sec-WebSocket-Location: ' . $this->full_url() . "\r\n";
+			}
+
+			if ($this->headers->has('Sec-WebSocket-Protocol'))
+			{
+				$handshake.= 'Sec-WebSocket-Protocol: ' . $this->headers->get('Sec-WebSocket-Protocol') . "\r\n";
+			}
+
+			$handshake.= "\r\n";
+
 			$key1 = $this->headers->get('Sec-WebSocket-Key1');
 			$key2 = $this->headers->get('Sec-WebSocket-Key2');
 			$handshake.= $this->_create_sec_handshake($key1, $key2, $code);
@@ -147,7 +172,7 @@ class WSRequest extends HTTPRequest
 				$n_spaces++;
 			}
 		}
-		
+
 		$return = ($int * 1) / $n_spaces;
 
 		return $return;
@@ -166,7 +191,7 @@ class WSRequest extends HTTPRequest
 	{
 		$i1 = $this->_obtain_int32($key1);
 		$i2 = $this->_obtain_int32($key2);
-		
+
 		$return = md5(
 			pack('N', $i1) .
 			pack('N', $i2) .
@@ -175,7 +200,7 @@ class WSRequest extends HTTPRequest
 		);
 		return $return;
 	}
-	
+
 	/**
 	 * Sets the body content after trimming the delimiter.
 	 *
@@ -259,4 +284,3 @@ class WSRequest extends HTTPRequest
 		return $size;
 	}
 }
-?>

@@ -25,6 +25,7 @@
 
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httpresponse.php';
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
+
 abstract class Controller
 {
 	/**
@@ -73,7 +74,6 @@ abstract class Controller
 	 * @access public
 	 * @param  HTTPRequest $request
 	 * @param  Dispatcher  $dispatcher
-	 * @return void
 	 */
 	public function __construct(HTTPRequest $request, Dispatcher $dispatcher)
 	{
@@ -161,6 +161,7 @@ abstract class Controller
 	 * @abstract
 	 *
 	 * @access public
+	 * @param  Controller $controller
 	 * @return void
 	 */
 	abstract public function process_event(Controller $controller = null);
@@ -169,6 +170,8 @@ abstract class Controller
 	 * Backgrounds the rest of the process so that we may continue with other users.
 	 *
 	 * @access protected
+	 * @param  string  $command
+	 * @param  boolean $split_headers
 	 * @return resource
 	 */
 	protected function background($command, $split_headers = false)
@@ -217,8 +220,6 @@ abstract class Controller
 	 */
 	public function background_write($socket, $ioevent, $process, $split_headers = false)
 	{
-		$attempts = 0;
-
 		$chunk = '';
 		while ($tmp = @fread($socket, IOStream::MAX_BUFFER_SIZE))
 		{
@@ -304,4 +305,3 @@ abstract class Controller
 		}
 	}
 }
-?>

@@ -28,6 +28,7 @@ require_once _LIBS . DIRECTORY_SEPARATOR . 'httpresponse.php';
 require_once _LIBS . DIRECTORY_SEPARATOR . 'httprequest.php';
 require_once _LIBS . DIRECTORY_SEPARATOR . 'controller.php';
 require_once _LIBS . DIRECTORY_SEPARATOR . 'controllers/core_controller.php';
+
 class Dispatcher
 {
 	/**
@@ -68,7 +69,6 @@ class Dispatcher
 	 *
 	 * @access public
 	 * @param  array  $config
-	 * @return void
 	 */
 	public function __construct($config)
 	{
@@ -215,6 +215,7 @@ class Dispatcher
 	 * Returns a response for an OPTIONS request. We allow pretty much anything.
 	 *
 	 * @access public
+	 * @param  HTTPRequest $request
 	 * @return void
 	 */
 	public function _options(HTTPRequest $request)
@@ -239,6 +240,7 @@ class Dispatcher
 	 * Removes a listener from the set of open connections.
 	 *
 	 * @access public
+	 * @param  Controller $controller
 	 * @return void
 	 */
 	public function remove_listener(Controller $controller)
@@ -261,6 +263,7 @@ class Dispatcher
 	 * Notifies all listeners of a new event.
 	 *
 	 * @access public
+	 * @param  Controller $controller
 	 * @return void
 	 */
 	public function notify_listeners(Controller $controller = null)
@@ -345,4 +348,3 @@ class Dispatcher
 		return $this->_httpserver;
 	}
 }
-?>
